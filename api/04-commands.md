@@ -286,7 +286,7 @@ public interface CommandSender {
 ## Example: Complete Command
 
 ```java
-package com.laits.breeding.commands;
+package com.example.myplugin.commands;
 
 import com.hypixel.hytale.server.core.command.system.CommandBase;
 import com.hypixel.hytale.server.core.command.system.CommandContext;
@@ -294,25 +294,25 @@ import com.hypixel.hytale.server.core.command.system.arguments.RequiredArg;
 import com.hypixel.hytale.server.core.command.system.arguments.types.ArgTypes;
 import com.hypixel.hytale.server.core.Message;
 
-public class BreedCommand extends CommandBase {
+public class TeleportCommand extends CommandBase {
 
-    private final RequiredArg<String> animalArg =
-        withRequiredArg("animal", "breeding.animal.desc", ArgTypes.STRING);
+    private final RequiredArg<String> playerArg =
+        withRequiredArg("player", "Player name", ArgTypes.STRING);
 
-    public BreedCommand() {
-        super("breed", "breeding.command.desc");
-        requirePermission("laits.breeding.breed");
+    public TeleportCommand() {
+        super("tpto", "Teleport to a player");
+        requirePermission("myplugin.teleport");
     }
 
     @Override
     protected void executeSync(CommandContext ctx) {
-        String animalType = animalArg.get(ctx);
+        String playerName = playerArg.get(ctx);
 
-        ctx.sendMessage(Message.raw("Breeding " + animalType + "..."));
+        ctx.sendMessage(Message.raw("Teleporting to " + playerName + "..."));
 
-        // Breeding logic here
+        // Teleport logic here
 
-        ctx.sendMessage(Message.raw("Breeding complete!"));
+        ctx.sendMessage(Message.raw("Teleported!"));
     }
 }
 ```
@@ -322,7 +322,7 @@ public class BreedCommand extends CommandBase {
 ```java
 @Override
 protected void setup() {
-    getCommandRegistry().registerCommand(new BreedCommand());
+    getCommandRegistry().registerCommand(new TeleportCommand());
 }
 ```
 

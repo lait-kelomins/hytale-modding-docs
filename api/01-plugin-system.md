@@ -197,7 +197,7 @@ manager.reload(identifier);
 ```
 Group:Name
 ```
-Example: `LaitsBreeding:LaitsBreeding`
+Example: `MyOrg:MyPlugin`
 
 ---
 
@@ -229,17 +229,17 @@ getBasePermission();             // Base permission (group.name)
 ## Example Plugin
 
 ```java
-package com.laits.breeding;
+package com.example.myplugin;
 
 import com.hypixel.hytale.server.core.plugin.JavaPlugin;
 import com.hypixel.hytale.server.core.plugin.JavaPluginInit;
 import javax.annotation.Nonnull;
 
-public class LaitsBreedingPlugin extends JavaPlugin {
+public class MyPlugin extends JavaPlugin {
 
-    private static LaitsBreedingPlugin instance;
+    private static MyPlugin instance;
 
-    public LaitsBreedingPlugin(@Nonnull JavaPluginInit init) {
+    public MyPlugin(@Nonnull JavaPluginInit init) {
         super(init);
         instance = this;
     }
@@ -270,7 +270,7 @@ public class LaitsBreedingPlugin extends JavaPlugin {
         // Cleanup
     }
 
-    public static LaitsBreedingPlugin getInstance() {
+    public static MyPlugin getInstance() {
         return instance;
     }
 }

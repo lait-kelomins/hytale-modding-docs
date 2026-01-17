@@ -4,7 +4,7 @@
 
 ## About
 
-This documentation covers the Hytale Server Plugin API discovered through development of mods like [Lait's Animal Breeding](https://github.com/lait-kelomins/laits-animal-breeding). The API is not officially documented, so this serves as a community resource.
+This documentation covers the Hytale Server Plugin API discovered through community modding efforts. The API is not officially documented, so this serves as a community resource.
 
 **Note:** This documentation is based on the current state of the Hytale server and may change as the game develops.
 

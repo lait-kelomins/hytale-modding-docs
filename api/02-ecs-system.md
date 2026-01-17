@@ -183,7 +183,7 @@ public void handle(..., CommandBuffer<EntityStore> buffer, ...) {
 From the original docs - a system that handles block breaking:
 
 ```java
-package com.laits.breeding;
+package com.example.myplugin;
 
 import com.hypixel.hytale.component.ArchetypeChunk;
 import com.hypixel.hytale.component.CommandBuffer;

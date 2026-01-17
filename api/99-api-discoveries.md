@@ -347,9 +347,9 @@ Object interactionsComp = chunk.getComponent(entityIndex, interactionsType);
 
 // 2. Call setInteractionId for right-click (Secondary = RMB)
 // InteractionType.Secondary for right-click
-interactionsComp.setInteractionId(InteractionType.Secondary, "FeedAnimal");
+interactionsComp.setInteractionId(InteractionType.Secondary, "MyCustomInteraction");
 
-// 3. Our FeedAnimalInteraction (registered with ID "FeedAnimal") should then trigger
+// 3. Your custom interaction (registered with ID "MyCustomInteraction") should then trigger
 ```
 
 ### InteractionType Values (from protocol)
@@ -379,25 +379,23 @@ interactionsComp.setInteractionId(InteractionType.Secondary, "FeedAnimal");
 - The `*` prefix likely indicates a lookup in a different registry (Interaction classes, not RootInteraction assets)
 
 **What Works:**
-- Setting interaction ID on entities: `setInteractionId(InteractionType.Secondary, "FeedAnimal")` ✓
+- Setting interaction ID on entities: `setInteractionId(InteractionType.Secondary, "MyCustomInteraction")` ✓
 - Creating RootInteraction assets at `Item/RootInteractions/` ✓
 - Creating Interaction assets at `Item/Interactions/` ✓
-- Codec registration: `getCodecRegistry(Interaction.CODEC).register("FeedAnimal", ...)` ✓
+- Codec registration: `getCodecRegistry(Interaction.CODEC).register("MyCustomInteraction", ...)` ✓
 
-**What Doesn't Work (Yet):**
-- Right-click triggering custom interactions
-- The `*` prefix mechanism for custom interactions
-- Getting our `FeedAnimalInteraction.firstRun()` to execute on right-click
+**What Works Now:**
+- Custom `SimpleInteraction` classes registered via `CodecMapRegistry`
+- Asset files in `Server/Item/RootInteractions/` and `Server/Item/Interactions/`
+- Entity interactions set via `setInteractionId()` at runtime (workaround)
 
-### Workaround: Command-Based Feeding
+**What Doesn't Work:**
+- The `*` prefix mechanism for code-registered interactions (unclear how it works)
+- `PrefabPlaceEntityEvent` / `LoadedNPCEvent` for detecting animal spawns
 
-Since right-click interaction attachment is not working, use commands:
-- `/feedrealcow` - Feed nearest cow (puts in love mode)
-- `/feedrealpig` - Feed nearest pig
-- `/feedrealchicken` - Feed nearest chicken
-- `/feedrealsheep` - Feed nearest sheep
-
-These commands work reliably via the `AnimalFinder` utility.
+**Workarounds in Use:**
+- Periodic entity scanning (30s) instead of spawn events
+- Runtime interaction modification instead of NPC Role asset overrides
 
 ---
 
@@ -406,6 +404,7 @@ These commands work reliably via the `AnimalFinder` utility.
 - [x] How to iterate all entities in a world - Use `World.execute()` + `Store.forEachChunk()`
 - [x] How to identify entity types - Use `ModelComponent.model.modelAssetId`
 - [x] Interactions component location - Index 73, has `setInteractionId()`
-- [x] Attach FeedAnimal interaction to animals at runtime - **PARTIAL: ID sets, but doesn't trigger**
+- [x] Attach custom interaction to animals at runtime - Works via `setInteractionId()` + asset files
 - [ ] Figure out `*` prefix mechanism for code-registered interactions
-- [ ] Alternative: Hook into UseNPCInteraction or similar built-in
+- [ ] Find proper entity spawn detection (NewSpawnComponent + TickingSystem?)
+- [ ] NPC Role asset overrides for interactions (instead of runtime modification)
