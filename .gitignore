@@ -1,0 +1,24 @@
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# Obsidian editor
+.obsidian/
+
+# Claude Code
+.claude/
+
+# Extracted JAR contents (for reference only)
+*.class
+com/
+Common/
+META-INF/
+config.json
+manifest.json
+jar-contents.txt
+output.txt
