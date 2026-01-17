@@ -78,7 +78,7 @@ public class Interactions implements Component<EntityStore> {
 
 ## Setting Up Entity Interactions
 
-> **VERIFIED WORKING APPROACH:** Use `store.ensureAndGetComponent()` to get or create the Interactions component, then use `setInteractionId()` directly.
+> **WORKAROUND:** Modifying entity interactions at runtime via reflection works but is not ideal. The preferred approach would be to define interactions in NPC Role assets, but this requires asset overrides for existing entities.
 
 ```java
 // Get the Interactions component type
