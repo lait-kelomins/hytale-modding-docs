@@ -255,5 +255,5 @@ public Query<EntityStore> getQuery() {
 
 ## Related Files
 
-- [02-ecs-system.md](./02-ecs-system.md) - ECS system details
-- [05-events.md](./05-events.md) - Event types
+- [02-ecs-system.md](api/02-ecs-system.md) - ECS system details
+- [05-events.md](api/05-events.md) - Event types

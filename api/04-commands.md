@@ -330,5 +330,5 @@ protected void setup() {
 
 ## Related Files
 
-- [01-plugin-system.md](./01-plugin-system.md) - Plugin lifecycle and registration
-- [05-events.md](./05-events.md) - Event system
+- [01-plugin-system.md](api/01-plugin-system.md) - Plugin lifecycle and registration
+- [05-events.md](api/05-events.md) - Event system

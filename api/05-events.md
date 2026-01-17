@@ -131,7 +131,7 @@ public interface ICancellable {
 
 > **WARNING - PlayerInteractEvent:** This event is **deprecated** and may not fire reliably for entity interactions. Use the Interaction System (entity `Interactions` component) instead for reliable entity click handling.
 
-> **WARNING - PlayerMouseButtonEvent:** While documented, this event may **not fire reliably** for entity clicks in practice. For entity interactions, use the Interaction System with custom `SimpleInteraction` classes registered via `CodecMapRegistry`. See [Interactions](./06-interactions.md) for the recommended approach.
+> **WARNING - PlayerMouseButtonEvent:** While documented, this event may **not fire reliably** for entity clicks in practice. For entity interactions, use the Interaction System with custom `SimpleInteraction` classes registered via `CodecMapRegistry`. See [Interactions](api/06-interactions.md) for the recommended approach.
 
 ---
 
@@ -364,6 +364,6 @@ private void onChat(PlayerChatEvent event) {
 
 ## Related Files
 
-- [01-plugin-system.md](./01-plugin-system.md) - Plugin lifecycle
-- [02-ecs-system.md](./02-ecs-system.md) - ECS events
-- [06-interactions.md](./06-interactions.md) - Interaction system
+- [01-plugin-system.md](api/01-plugin-system.md) - Plugin lifecycle
+- [02-ecs-system.md](api/02-ecs-system.md) - ECS events
+- [06-interactions.md](api/06-interactions.md) - Interaction system

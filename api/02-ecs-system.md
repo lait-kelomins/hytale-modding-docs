@@ -249,6 +249,6 @@ protected void setup() {
 
 ## Related Files
 
-- [01-plugin-system.md](./01-plugin-system.md) - Plugin setup
-- [03-entities.md](./03-entities.md) - Entity details
-- [05-events.md](./05-events.md) - Player events
+- [01-plugin-system.md](api/01-plugin-system.md) - Plugin setup
+- [03-entities.md](api/03-entities.md) - Entity details
+- [05-events.md](api/05-events.md) - Player events
