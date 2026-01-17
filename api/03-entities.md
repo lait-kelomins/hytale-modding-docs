@@ -166,6 +166,12 @@ Entities are spawned via the prefab system:
 | `PrefabPasteEvent` | Event when prefab pasted |
 | `PrefabRotation` | Rotation handling |
 
+> **WARNING - PrefabPlaceEntityEvent:** This event only fires for **structure prefabs**, NOT for NPC/animal spawns. Tested and confirmed to return 0 triggers even when animals are visibly spawning in-game.
+
+> **WARNING - LoadedNPCEvent:** Does **NOT fire** for animal/NPC spawns. Do not rely on this event for detecting new entities.
+
+> **RECOMMENDED APPROACH:** Use periodic scanning (every 30 seconds) with `Store.forEachChunk()` to find entities by their `ModelComponent`. This is reliable and has minimal performance impact.
+
 ### Spawn Interactions
 
 **Class:** `com.hypixel.hytale.server.core.modules.interaction.interaction.config.server.SpawnPrefabInteraction`

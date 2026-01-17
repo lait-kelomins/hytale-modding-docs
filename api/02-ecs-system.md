@@ -231,16 +231,19 @@ public class BlockBreakHandler extends EntityEventSystem<EntityStore, BreakBlock
 
 ## Registering Systems
 
-In your plugin's `onEnable()`:
+> **WARNING:** The correct method is `setup()`, NOT `onEnable()` (Bukkit pattern). Hytale uses different lifecycle methods.
+
+In your plugin's `setup()` method:
 
 ```java
 @Override
-public void onEnable() {
-    // TODO: Find the correct registration API
-    // Likely through a SystemManager or similar
-    // registerSystem(new BlockBreakHandler());
+protected void setup() {
+    // Register ECS systems via EntityStoreRegistry
+    getEntityStoreRegistry().registerSystem(new MyEntityEventSystem());
 }
 ```
+
+> **NOTE:** Custom ECS system registration is **untested**. The API exists but practical examples are limited.
 
 ---
 

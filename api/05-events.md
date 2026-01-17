@@ -129,6 +129,10 @@ public interface ICancellable {
 | `AddPlayerToWorldEvent` | Sync | No | Player added to world |
 | `DrainPlayerFromWorldEvent` | Sync | No | Player removed from world |
 
+> **WARNING - PlayerInteractEvent:** This event is **deprecated** and may not fire reliably for entity interactions. Use the Interaction System (entity `Interactions` component) instead for reliable entity click handling.
+
+> **WARNING - PlayerMouseButtonEvent:** While documented, this event may **not fire reliably** for entity clicks in practice. For entity interactions, use the Interaction System with custom `SimpleInteraction` classes registered via `CodecMapRegistry`. See [Interactions](./06-interactions.md) for the recommended approach.
+
 ---
 
 ## Block/Item Events (ECS)

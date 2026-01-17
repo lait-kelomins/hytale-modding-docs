@@ -78,23 +78,33 @@ public class Interactions implements Component<EntityStore> {
 
 ## Setting Up Entity Interactions
 
-Use the command buffer pattern to add interactions to entities:
+> **VERIFIED WORKING APPROACH:** Use `store.ensureAndGetComponent()` to get or create the Interactions component, then use `setInteractionId()` directly.
 
 ```java
-Interactions interactions = commandBuffer.getComponent(
-    entityRef,
-    Interactions.getComponentType()
-);
+// Get the Interactions component type
+Class<?> interactionsClass = Class.forName(
+    "com.hypixel.hytale.server.core.modules.interaction.Interactions");
+Object interactionsType = interactionsClass.getMethod("getComponentType").invoke(null);
 
-if (interactions == null) {
-    interactions = new Interactions();
-    commandBuffer.putComponent(entityRef,
-        Interactions.getComponentType(), interactions);
-}
+// Ensure the component exists and get it
+Object interactions = store.ensureAndGetComponent(entityRef, interactionsType);
 
-interactions.setInteractionId(InteractionType.Use, "my_custom_interaction");
-interactions.setInteractionHint("Press E to interact");
+// Get InteractionType.Use enum value
+Class<?> interactionTypeClass = Class.forName("com.hypixel.hytale.protocol.InteractionType");
+Object useType = Arrays.stream(interactionTypeClass.getEnumConstants())
+    .filter(e -> e.toString().equals("Use")).findFirst().orElse(null);
+
+// Set the interaction ID (must match a registered RootInteraction)
+Method setIntId = interactions.getClass().getMethod("setInteractionId",
+    interactionTypeClass, String.class);
+setIntId.invoke(interactions, useType, "Root_MyCustomInteraction");
+
+// Optionally set hint text (uses localization keys for keybind icons)
+Method setHint = interactions.getClass().getMethod("setInteractionHint", String.class);
+setHint.invoke(interactions, "server.interactionHints.generic");
 ```
+
+> **NOTE:** The `commandBuffer` pattern shown in official docs is **untested**. The reflection approach above is confirmed working.
 
 ---
 
@@ -137,6 +147,80 @@ public enum InteractionTarget {
 |---------|-------------|
 | `/interaction run <id>` | Execute specific interaction |
 | `/interaction clear` | Clear current interactions |
+
+---
+
+## Registering Custom Interactions
+
+> **VERIFIED WORKING:** Custom interactions must be registered with the CodecMapRegistry during plugin setup.
+
+```java
+@Override
+protected void setup() {
+    // Register custom interaction class
+    getCodecMapRegistry()
+        .register("MyCustomInteraction", MyCustomInteraction.class, MyCustomInteraction.CODEC);
+}
+```
+
+### Custom Interaction Class
+
+```java
+public class MyCustomInteraction extends SimpleInteraction {
+    public static final BuilderCodec<MyCustomInteraction> CODEC =
+        BuilderCodec.builder(MyCustomInteraction.class, MyCustomInteraction::new, SimpleInteraction.CODEC)
+            .build();
+
+    @Override
+    protected void tick0(
+        boolean firstRun,
+        float time,
+        InteractionType type,
+        InteractionContext context,
+        CooldownHandler cooldownHandler
+    ) {
+        if (firstRun) {
+            // Your custom logic here
+            // Access target entity: context.getTargetEntity()
+            // Access held item: context.getHeldItem()
+        }
+        super.tick0(firstRun, time, type, context, cooldownHandler);
+    }
+}
+```
+
+---
+
+## Asset File Paths
+
+> **VERIFIED WORKING PATHS:**
+
+| Asset Type | Path |
+|------------|------|
+| RootInteraction | `Server/Item/RootInteractions/{id}.json` |
+| Interaction | `Server/Item/Interactions/{id}.json` |
+
+> **WARNING:** Paths like `Server/Interaction/RootInteraction/` do NOT work. Use the paths above.
+
+### RootInteraction Asset Example
+
+```json
+// Server/Item/RootInteractions/Root_MyCustom.json
+{
+  "InteractionIds": ["MyCustomInteraction"],
+  "RequireNewClick": true,
+  "NeedsRemoteSync": true
+}
+```
+
+### Interaction Asset Example
+
+```json
+// Server/Item/Interactions/MyCustomInteraction.json
+{
+  "Type": "MyCustomInteraction"
+}
+```
 
 ---
 
