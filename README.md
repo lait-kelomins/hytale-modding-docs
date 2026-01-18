@@ -6,7 +6,9 @@
 
 This documentation covers the Hytale Server Plugin API discovered through community modding efforts. The API is not officially documented, so this serves as a community resource.
 
-**Note:** This documentation is based on the current state of the Hytale server and may change as the game develops.
+**Pragmatic approach:** This documentation focuses on patterns that *work today* with the current game code. We prioritize getting things done over finding the "perfect" solution. There are likely cleaner or more efficient approaches for many of the techniques documented here - we just haven't found them yet.
+
+**Help us improve:** If you discover better patterns, find errors, or want to contribute new documentation, we'd love to hear from you! Open an [issue](https://github.com/lait-kelomins/hytale-modding-docs/issues) or submit a pull request. See our [Contributing Guide](CONTRIBUTING.md) for details.
 
 ## Quick Navigation
 
@@ -61,7 +63,10 @@ com.hypixel.hytale.
 
 ## Contributing
 
-Found an error or want to add more API documentation? Contributions are welcome! Open an issue or submit a pull request.
+Found an error, discovered a better approach, or want to add new documentation? Contributions are welcome!
+
+- **Report issues:** [Open an issue](https://github.com/lait-kelomins/hytale-modding-docs/issues)
+- **Contribute:** See our [Contributing Guide](CONTRIBUTING.md)
 
 ## Disclaimer
 
