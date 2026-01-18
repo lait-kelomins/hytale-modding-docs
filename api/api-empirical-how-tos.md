@@ -647,6 +647,141 @@ public void playSound(World world, String soundId, double x, double y, double z)
 
 ---
 
+## How To: Add Custom Sounds
+
+To add custom sounds to your mod, you need two things:
+1. The sound file (`.ogg` format)
+2. A SoundEvent JSON definition
+
+### File Structure
+
+```
+src/main/resources/
+├── Common/
+│   └── Sounds/
+│       └── MyCustomSound.ogg        # Your sound file
+└── Server/
+    └── Audio/
+        └── SoundEvents/
+            └── SFX_MyCustomSound.json   # Sound event definition
+```
+
+> **Important:** Sound files go in `Common/Sounds/`, not `Server/Sounds/`. The JSON path `Sounds/...` automatically maps to `Common/Sounds/...`.
+
+### SoundEvent JSON Structure
+
+**File:** `Server/Audio/SoundEvents/SFX_MyCustomSound.json`
+```json
+{
+  "Layers": [
+    {
+      "Files": ["Sounds/MyCustomSound.ogg"],
+      "Volume": 0,
+      "RandomSettings": {
+        "MinPitch": -1,
+        "MaxPitch": 1,
+        "MinVolume": -2
+      }
+    }
+  ],
+  "Volume": 0,
+  "Parent": "SFX_Attn_Moderate",
+  "PreventSoundInterruption": false
+}
+```
+
+### Playing Custom Sounds in Code
+
+The sound ID is the JSON filename without the `.json` extension:
+
+```java
+int soundId = SoundEvent.getAssetMap().getIndex("SFX_MyCustomSound");
+if (soundId >= 0) {
+    SoundUtil.playSoundEvent3d(soundId, SoundCategory.SFX, x, y, z, store);
+}
+```
+
+### SoundEvent Properties
+
+| Property | Description |
+|----------|-------------|
+| `Files` | Array of `.ogg` files (picks randomly if multiple) |
+| `Volume` | Decibels (0 = normal, negative = quieter, positive = louder) |
+| `Parent` | Attenuation preset (controls distance falloff) |
+| `RandomSettings.MinPitch` | Minimum pitch variation |
+| `RandomSettings.MaxPitch` | Maximum pitch variation |
+| `RandomSettings.MinVolume` | Minimum volume variation |
+| `StartDelay` | Delay in seconds before playing |
+| `PreventSoundInterruption` | If true, sound won't be cut off by new sounds |
+| `Probability` | Chance (0-100) this layer plays |
+
+### Attenuation Presets
+
+| Preset | Use Case |
+|--------|----------|
+| `SFX_Attn_VeryQuiet` | Subtle sounds, short range |
+| `SFX_Attn_Quiet` | Quiet sounds |
+| `SFX_Attn_Moderate` | Standard sound effects |
+| `SFX_Attn_Loud` | Loud sounds, longer range |
+| `SFX_Attn_VeryLoud` | Very loud sounds, maximum range |
+
+### Multiple Sound Variations
+
+For random variation, add multiple files to the array:
+
+```json
+{
+  "Layers": [
+    {
+      "Files": [
+        "Sounds/MySound_01.ogg",
+        "Sounds/MySound_02.ogg",
+        "Sounds/MySound_03.ogg"
+      ],
+      "Volume": 0,
+      "RandomSettings": {
+        "MinPitch": -2,
+        "MaxPitch": 2
+      }
+    }
+  ],
+  "Parent": "SFX_Attn_Moderate"
+}
+```
+
+### Layered Sounds
+
+Add multiple layers for complex sounds (e.g., main sound + sweetener):
+
+```json
+{
+  "Layers": [
+    {
+      "Files": ["Sounds/MainSound.ogg"],
+      "Volume": 0
+    },
+    {
+      "Files": ["Sounds/Sweetener.ogg"],
+      "Volume": -6,
+      "Probability": 50
+    }
+  ],
+  "Parent": "SFX_Attn_Moderate"
+}
+```
+
+### Manifest Requirement
+
+Your `manifest.json` must have asset pack enabled:
+
+```json
+{
+  "IncludesAssetPack": true
+}
+```
+
+---
+
 ## How To: Modify Player Inventory
 
 ### Get Player Inventory
