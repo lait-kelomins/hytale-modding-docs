@@ -11,6 +11,89 @@ A quick start guide for creating Hytale server plugins.
 
 ---
 
+## Installation
+
+### Install Java 21 JDK
+
+#### Windows
+
+1. Download from [Microsoft OpenJDK](https://learn.microsoft.com/en-us/java/openjdk/download#openjdk-21) or [Adoptium](https://adoptium.net/temurin/releases/?version=21)
+2. Run the installer
+3. Set `JAVA_HOME` environment variable:
+   ```cmd
+   setx JAVA_HOME "C:\Program Files\Microsoft\jdk-21.0.x-hotspot"
+   ```
+4. Verify installation:
+   ```cmd
+   java -version
+   ```
+
+#### macOS
+
+```bash
+# Using Homebrew
+brew install openjdk@21
+
+# Add to PATH
+echo 'export PATH="/opt/homebrew/opt/openjdk@21/bin:$PATH"' >> ~/.zshrc
+echo 'export JAVA_HOME=$(/usr/libexec/java_home -v 21)' >> ~/.zshrc
+source ~/.zshrc
+
+# Verify
+java -version
+```
+
+#### Linux
+
+```bash
+# Ubuntu/Debian
+sudo apt install openjdk-21-jdk
+
+# Fedora
+sudo dnf install java-21-openjdk-devel
+
+# Verify
+java -version
+```
+
+### Install Gradle
+
+#### Windows
+
+1. Download from [gradle.org/releases](https://gradle.org/releases/)
+2. Extract to `C:\Gradle\gradle-9.x`
+3. Add to PATH:
+   ```cmd
+   setx PATH "%PATH%;C:\Gradle\gradle-9.x\bin"
+   ```
+4. Verify:
+   ```cmd
+   gradle -version
+   ```
+
+#### macOS
+
+```bash
+brew install gradle
+gradle -version
+```
+
+#### Linux
+
+```bash
+# Using SDKMAN (recommended)
+curl -s "https://get.sdkman.io" | bash
+source "$HOME/.sdkman/bin/sdkman-init.sh"
+sdk install gradle 9.0
+
+# Verify
+gradle -version
+```
+
+> **Tip:** After setting up the Gradle wrapper in your project, you won't need Gradle installed globally - use `./gradlew` or `gradlew.bat` instead.
+
+---
+
 ## Quick Start
 
 ### 1. Create Project Structure
