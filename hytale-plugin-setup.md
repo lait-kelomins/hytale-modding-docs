@@ -40,9 +40,13 @@ winget install Microsoft.OpenJDK.21
    setx JAVA_HOME "C:\Program Files\Microsoft\jdk-21.0.x-hotspot"
    ```
 
-**Verify installation:**
+**Verify:** Open a new terminal and run:
 ```cmd
 java -version
+```
+Expected output (version should be 21.x.x):
+```
+openjdk version "21.0.x" 2024-xx-xx
 ```
 
 #### macOS
@@ -55,10 +59,13 @@ brew install openjdk@21
 echo 'export PATH="/opt/homebrew/opt/openjdk@21/bin:$PATH"' >> ~/.zshrc
 echo 'export JAVA_HOME=$(/usr/libexec/java_home -v 21)' >> ~/.zshrc
 source ~/.zshrc
+```
 
-# Verify
+**Verify:**
+```bash
 java -version
 ```
+Expected: `openjdk version "21.x.x"`
 
 #### Linux
 
@@ -68,10 +75,15 @@ sudo apt install openjdk-21-jdk
 
 # Fedora
 sudo dnf install java-21-openjdk-devel
+```
 
-# Verify
+**Verify:**
+```bash
 java -version
 ```
+Expected: `openjdk version "21.x.x"`
+
+---
 
 ### Install Gradle
 
@@ -99,17 +111,28 @@ winget install Gradle.Gradle
    setx PATH "%PATH%;C:\Gradle\gradle-9.x\bin"
    ```
 
-**Verify installation:**
+**Verify:** Open a new terminal and run:
 ```cmd
 gradle -version
+```
+Expected output (version should be 9.x):
+```
+------------------------------------------------------------
+Gradle 9.x
+------------------------------------------------------------
 ```
 
 #### macOS
 
 ```bash
 brew install gradle
+```
+
+**Verify:**
+```bash
 gradle -version
 ```
+Expected: `Gradle 9.x`
 
 #### Linux
 
@@ -118,10 +141,13 @@ gradle -version
 curl -s "https://get.sdkman.io" | bash
 source "$HOME/.sdkman/bin/sdkman-init.sh"
 sdk install gradle 9.0
+```
 
-# Verify
+**Verify:**
+```bash
 gradle -version
 ```
+Expected: `Gradle 9.x`
 
 > **Tip:** After setting up the Gradle wrapper in your project, you won't need Gradle installed globally - use `./gradlew` or `gradlew.bat` instead.
 
@@ -130,6 +156,8 @@ gradle -version
 ## Quick Start
 
 ### 1. Create Project Structure
+
+Create the following folder structure:
 
 ```
 my-hytale-plugin/
@@ -144,19 +172,56 @@ my-hytale-plugin/
 └── gradle.properties
 ```
 
+**Verify (Windows):**
+```powershell
+tree /F
+```
+
+**Verify (Linux/Mac):**
+```bash
+find . -type f | head -20
+```
+Expected: You should see all the files listed above.
+
+---
+
 ### 2. Initialize Gradle Wrapper
 
-Run this once in your project folder to create `gradlew`/`gradlew.bat`:
+Run this once in your project folder:
 
 ```bash
 gradle wrapper --gradle-version 9.0
 ```
+
+**Verify:** Check that these files were created:
+- `gradlew` (Linux/Mac)
+- `gradlew.bat` (Windows)
+- `gradle/wrapper/gradle-wrapper.jar`
+- `gradle/wrapper/gradle-wrapper.properties`
+
+```bash
+# Linux/Mac
+ls gradlew gradle/wrapper/
+
+# Windows
+dir gradlew.bat gradle\wrapper\
+```
+
+---
 
 ### 3. settings.gradle
 
 ```groovy
 rootProject.name = 'my-hytale-plugin'
 ```
+
+**Verify:**
+```bash
+cat settings.gradle
+```
+Expected: Should show `rootProject.name = 'my-hytale-plugin'`
+
+---
 
 ### 4. gradle.properties
 
@@ -165,6 +230,14 @@ org.gradle.jvmargs=-Xmx2G
 org.gradle.parallel=true
 org.gradle.caching=true
 ```
+
+**Verify:**
+```bash
+cat gradle.properties
+```
+Expected: Should show the three properties above.
+
+---
 
 ### 5. build.gradle
 
@@ -217,7 +290,21 @@ test {
 }
 ```
 
+**Verify:** Test that Gradle can parse the build file:
+```bash
+# Windows
+.\gradlew.bat tasks --quiet
+
+# Linux/Mac
+./gradlew tasks --quiet
+```
+Expected: Should list available tasks without errors. If you see errors about `HytaleServer.jar`, that's OK at this stage - it means Gradle is working but the JAR is missing.
+
+---
+
 ### 6. manifest.json
+
+Place in `src/main/resources/manifest.json`:
 
 ```json
 {
@@ -237,7 +324,17 @@ test {
 
 > **Note:** `${version}` is replaced by Gradle's `processResources` task with the version from `build.gradle`.
 
+**Verify:**
+```bash
+cat src/main/resources/manifest.json
+```
+Expected: Should show the JSON above with `"Main"` matching your package/class path.
+
+---
+
 ### 7. Main Plugin Class
+
+Create `src/main/java/com/yourname/pluginname/MyPlugin.java`:
 
 ```java
 package com.yourname.pluginname;
@@ -274,6 +371,57 @@ public class MyPlugin extends JavaPlugin {
 
 **Important:** Does NOT use `onLoad()`, `onEnable()`, `onDisable()` like Bukkit/Spigot!
 
+**Verify:** Ensure the package declaration matches the file path:
+- File: `src/main/java/com/yourname/pluginname/MyPlugin.java`
+- Package: `package com.yourname.pluginname;`
+- Manifest Main: `"Main": "com.yourname.pluginname.MyPlugin"`
+
+---
+
+## Build & Deploy
+
+### Build
+
+**Windows:**
+```powershell
+$env:JAVA_HOME = "C:\Program Files\Microsoft\jdk-21.0.x-hotspot"
+.\gradlew.bat build -x test
+```
+
+**Linux/Mac:**
+```bash
+JAVA_HOME=/path/to/jdk21 ./gradlew build -x test
+```
+
+**Verify:** Check that the JAR was created:
+```bash
+# Windows
+dir build\libs\
+
+# Linux/Mac
+ls -la build/libs/
+```
+Expected: Should show `my-hytale-plugin-1.0.0.jar` (or similar).
+
+---
+
+### Deploy
+
+Copy the JAR from `build/libs/` to the `Mods` folder inside your world's save directory.
+
+**Windows:**
+```
+%APPDATA%\Hytale\UserData\Saves\<world_name>\Mods\
+```
+
+**Verify:** Start the Hytale server and check the console for:
+```
+[INFO] Plugin setup complete!
+[INFO] Plugin started!
+```
+
+If you see these messages, your plugin loaded successfully!
+
 ---
 
 ## Adding Features
@@ -287,6 +435,10 @@ getEventRegistry().register(PlayerConnectEvent.class, event -> {
     getLogger().atInfo().log("Player connected: %s", player.getName());
 });
 ```
+
+**Verify:** Connect to the server and check the console for `Player connected: <your_name>`.
+
+---
 
 ### Command
 
@@ -313,6 +465,8 @@ public class HelloCommand extends AbstractCommand {
 getCommandRegistry().registerCommand(new HelloCommand());
 ```
 
+**Verify:** In-game, run `/hello`. Expected response: `Hello, World!`
+
 ---
 
 ## Asset Packs
@@ -334,33 +488,17 @@ src/main/resources/
     └── Particles/
 ```
 
-See [How To: Add Custom Sounds](api/api-empirical-how-tos.md#how-to-add-custom-sounds) for details.
-
----
-
-## Build & Deploy
-
-### Windows
-
-```powershell
-$env:JAVA_HOME = "C:\Program Files\Microsoft\jdk-21.0.x-hotspot"
-.\gradlew.bat build -x test
-```
-
-### Linux/Mac
-
+**Verify:** After building, check your JAR contains the assets:
 ```bash
-JAVA_HOME=/path/to/jdk21 ./gradlew build -x test
-```
+# Windows (requires 7-Zip or similar)
+jar tf build/libs/my-hytale-plugin-1.0.0.jar | findstr "Common Server"
 
-### Deploy
-
-Copy the JAR from `build/libs/` to the `Mods` folder inside your world's save directory.
-
-**Windows:**
+# Linux/Mac
+jar tf build/libs/my-hytale-plugin-1.0.0.jar | grep -E "Common|Server"
 ```
-%APPDATA%\Hytale\UserData\Saves\<world_name>\Mods\
-```
+Expected: Should list your asset files.
+
+See [How To: Add Custom Sounds](api/api-empirical-how-tos.md#how-to-add-custom-sounds) for details.
 
 ---
 
@@ -372,6 +510,18 @@ getLogger().atInfo().log("Formatted: %s", value);
 getLogger().atWarning().log("Warning message");
 getLogger().atSevere().log("Error message");
 ```
+
+---
+
+## Troubleshooting
+
+| Problem | Solution |
+|---------|----------|
+| `java -version` shows wrong version | Ensure `JAVA_HOME` is set correctly and restart terminal |
+| `gradle` command not found | Ensure Gradle is in PATH and restart terminal |
+| Build fails with "cannot find symbol" | Check that `HytaleServer.jar` is in `libs/` folder |
+| Plugin doesn't load | Check that `Main` in manifest.json matches your class path exactly |
+| `${version}` not replaced | Ensure `processResources` block is in build.gradle |
 
 ---
 
