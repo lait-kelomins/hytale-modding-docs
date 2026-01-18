@@ -340,85 +340,72 @@ ChatUtil.sendInfo(ctx, "Current Health", "100");
 ```java
 import com.hypixel.hytale.server.core.entity.entities.Player;
 import com.hypixel.hytale.server.core.universe.world.World;
+import com.hypixel.hytale.server.core.modules.entity.component.TransformComponent;
+import com.hypixel.hytale.component.ComponentType;
+import com.hypixel.hytale.component.Store;
+import com.hypixel.hytale.component.Ref;
+import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
+
+// Cache component type as static field
+private static final ComponentType<EntityStore, TransformComponent> TRANSFORM_TYPE =
+    TransformComponent.getComponentType();
 
 // In command execute():
 Player player = (Player) ctx.sender();
 World world = player.getWorld();
+Ref<EntityStore> playerRef = ctx.senderAsPlayerRef();
+Store<EntityStore> store = world.getEntityStore().getStore();
 
-// Get player position via TransformComponent
-Object playerRef = ctx.senderAsPlayerRef();
-Object store = world.getEntityStore().getStore();
+// Get transform component directly (no reflection!)
+TransformComponent transform = store.getComponent(playerRef, TRANSFORM_TYPE);
+Vector3d position = transform.getPosition();
 
-Class<?> transformClass = Class.forName(
-    "com.hypixel.hytale.server.core.modules.entity.component.TransformComponent");
-Object transformType = transformClass.getMethod("getComponentType").invoke(null);
-Object transform = store.getClass()
-    .getMethod("getComponent", Object.class, Object.class)
-    .invoke(store, playerRef, transformType);
-
-Method getPos = transform.getClass().getMethod("getPosition");
-Object position = getPos.invoke(transform);  // Vector3d
-
-double playerX = (double) position.getClass().getMethod("getX").invoke(position);
-double playerY = (double) position.getClass().getMethod("getY").invoke(position);
-double playerZ = (double) position.getClass().getMethod("getZ").invoke(position);
+double playerX = position.getX();
+double playerY = position.getY();
+double playerZ = position.getZ();
 ```
 
 ### Iterate All Entities (on WorldThread)
 
 ```java
+import com.hypixel.hytale.component.ArchetypeChunk;
+import com.hypixel.hytale.component.CommandBuffer;
+import com.hypixel.hytale.component.ComponentType;
+import com.hypixel.hytale.component.Ref;
+import com.hypixel.hytale.component.Store;
+import com.hypixel.hytale.server.core.modules.entity.component.ModelComponent;
+import com.hypixel.hytale.server.core.modules.entity.component.TransformComponent;
+import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
+
+// Cache component types as static fields
+private static final ComponentType<EntityStore, ModelComponent> MODEL_TYPE =
+    ModelComponent.getComponentType();
+private static final ComponentType<EntityStore, TransformComponent> TRANSFORM_TYPE =
+    TransformComponent.getComponentType();
+
 public void findNearbyEntities(Player player, double radius) {
     World world = player.getWorld();
+    Store<EntityStore> store = world.getEntityStore().getStore();
 
     // MUST run on WorldThread
     world.execute(() -> {
-        Object store = world.getEntityStore().getStore();
-
-        // Get component types we need
-        Class<?> modelCompClass = Class.forName(
-            "com.hypixel.hytale.server.core.modules.entity.component.ModelComponent");
-        Class<?> transformClass = Class.forName(
-            "com.hypixel.hytale.server.core.modules.entity.component.TransformComponent");
-
-        Object modelCompType = modelCompClass.getMethod("getComponentType").invoke(null);
-        Object transformType = transformClass.getMethod("getComponentType").invoke(null);
-
-        // Collect chunk data for iteration
-        Method collectMethod = store.getClass().getMethod("collectArchetypeChunkData");
-        Object[] chunks = (Object[]) collectMethod.invoke(store);
-
-        for (Object chunkData : chunks) {
-            if (chunkData == null) continue;
-
-            Method getChunk = chunkData.getClass().getMethod("getChunk");
-            Object chunk = getChunk.invoke(chunkData);
-
-            Method sizeMethod = chunk.getClass().getMethod("size");
-            int size = (int) sizeMethod.invoke(chunk);
-
+        store.forEachChunk((ArchetypeChunk<EntityStore> chunk, CommandBuffer<EntityStore> buffer) -> {
+            int size = chunk.size();
             for (int i = 0; i < size; i++) {
                 try {
-                    // Get model to identify entity type
-                    Method getComp = chunk.getClass().getMethod("getComponent", int.class, Object.class);
-                    Object modelComp = getComp.invoke(chunk, i, modelCompType);
+                    // Get components directly (no reflection!)
+                    ModelComponent modelComp = chunk.getComponent(i, MODEL_TYPE);
                     if (modelComp == null) continue;
 
-                    // Get position
-                    Object transformComp = getComp.invoke(chunk, i, transformType);
+                    TransformComponent transformComp = chunk.getComponent(i, TRANSFORM_TYPE);
                     if (transformComp == null) continue;
 
-                    // Extract modelAssetId
-                    Field modelField = modelComp.getClass().getDeclaredField("model");
-                    modelField.setAccessible(true);
-                    Object model = modelField.get(modelComp);
+                    // Extract modelAssetId (still needs reflection for private field)
+                    String modelAssetId = extractModelAssetId(modelComp);
+                    if (modelAssetId == null) continue;
 
-                    Field assetIdField = model.getClass().getDeclaredField("modelAssetId");
-                    assetIdField.setAccessible(true);
-                    String modelAssetId = (String) assetIdField.get(model);
-
-                    // Get entity ref for further use
-                    Method getRef = chunk.getClass().getMethod("getReferenceTo", int.class);
-                    Object entityRef = getRef.invoke(chunk, i);
+                    // Get entity ref directly
+                    Ref<EntityStore> entityRef = chunk.getReferenceTo(i);
 
                     // Do something with the entity
                     System.out.println("Found: " + modelAssetId);
@@ -427,8 +414,26 @@ public void findNearbyEntities(Player player, double radius) {
                     // Entity may have been despawned, skip it
                 }
             }
-        }
+        });
     });
+}
+
+// Helper to extract modelAssetId (model field is private)
+private static String extractModelAssetId(ModelComponent modelComp) {
+    try {
+        Field modelField = ModelComponent.class.getDeclaredField("model");
+        modelField.setAccessible(true);
+        Object model = modelField.get(modelComp);
+        if (model == null) return null;
+
+        // Parse from toString: Model{modelAssetId='Cow', ...}
+        String str = model.toString();
+        int start = str.indexOf("modelAssetId='") + 14;
+        int end = str.indexOf("'", start);
+        return str.substring(start, end);
+    } catch (Exception e) {
+        return null;
+    }
 }
 ```
 
@@ -702,27 +707,26 @@ scheduler.scheduleAtFixedRate(this::minuteTick, 0, 1, TimeUnit.MINUTES);
 ## How To: Get Entity Position and Transform
 
 ```java
+import com.hypixel.hytale.component.ComponentType;
+import com.hypixel.hytale.component.Ref;
+import com.hypixel.hytale.component.Store;
+import com.hypixel.hytale.server.core.modules.entity.component.TransformComponent;
+import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
+import org.joml.Vector3d;
+
 public class EntityUtil {
 
-    public static double[] getEntityPosition(Object store, Object entityRef) {
+    // Cache component type as static field
+    private static final ComponentType<EntityStore, TransformComponent> TRANSFORM_TYPE =
+        TransformComponent.getComponentType();
+
+    public static double[] getEntityPosition(Store<EntityStore> store, Ref<EntityStore> entityRef) {
         try {
-            Class<?> transformClass = Class.forName(
-                "com.hypixel.hytale.server.core.modules.entity.component.TransformComponent");
-            Object transformType = transformClass.getMethod("getComponentType").invoke(null);
-
-            Method getComp = store.getClass().getMethod("getComponent", Object.class, Object.class);
-            Object transform = getComp.invoke(store, entityRef, transformType);
-
+            TransformComponent transform = store.getComponent(entityRef, TRANSFORM_TYPE);
             if (transform == null) return null;
 
-            Method getPos = transform.getClass().getMethod("getPosition");
-            Object position = getPos.invoke(transform);
-
-            double x = (double) position.getClass().getMethod("getX").invoke(position);
-            double y = (double) position.getClass().getMethod("getY").invoke(position);
-            double z = (double) position.getClass().getMethod("getZ").invoke(position);
-
-            return new double[] { x, y, z };
+            Vector3d position = transform.getPosition();
+            return new double[] { position.x, position.y, position.z };
         } catch (Exception e) {
             return null;
         }
@@ -903,16 +907,22 @@ public class MyPlugin extends JavaPlugin {
 Since you can't easily add custom components, use a Map keyed by entity identifier.
 
 ```java
+import com.hypixel.hytale.component.ComponentType;
+import com.hypixel.hytale.component.Ref;
+import com.hypixel.hytale.component.Store;
+import com.hypixel.hytale.server.core.entity.UUIDComponent;
+import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.Map;
 import java.util.UUID;
 
 public class EntityDataManager {
+    // Cache component type
+    private static final ComponentType<EntityStore, UUIDComponent> UUID_TYPE =
+        UUIDComponent.getComponentType();
+
     // Use entity UUID as key (persists across sessions if entity is saved)
     private static final Map<UUID, MyEntityData> entityData = new ConcurrentHashMap<>();
-
-    // Or use entity index for transient data (faster, but resets on entity reload)
-    private static final Map<Integer, MyEntityData> transientData = new ConcurrentHashMap<>();
 
     public static void setData(UUID entityUuid, MyEntityData data) {
         entityData.put(entityUuid, data);
@@ -926,21 +936,15 @@ public class EntityDataManager {
         entityData.remove(entityUuid);
     }
 
-    // Get UUID from entity ref
-    public static UUID getEntityUUID(Object store, Object entityRef) {
+    // Get UUID from entity ref (no reflection needed!)
+    public static UUID getEntityUUID(Store<EntityStore> store, Ref<EntityStore> entityRef) {
         try {
-            Class<?> uuidCompClass = Class.forName("com.hypixel.hytale.server.core.entity.UUIDComponent");
-            Object uuidType = uuidCompClass.getMethod("getComponentType").invoke(null);
-
-            Method getComp = store.getClass().getMethod("getComponent", Object.class, Object.class);
-            Object uuidComp = getComp.invoke(store, entityRef, uuidType);
-
+            UUIDComponent uuidComp = store.getComponent(entityRef, UUID_TYPE);
             if (uuidComp != null) {
-                Method getUuid = uuidComp.getClass().getMethod("getUuid");
-                return (UUID) getUuid.invoke(uuidComp);
+                return uuidComp.getUuid();
             }
         } catch (Exception e) {
-            // Entity doesn't have UUID component
+            // Entity doesn't have UUID component or was despawned
         }
         return null;
     }
@@ -1468,22 +1472,27 @@ try {
 ### Getting Model Asset ID from Entity
 
 ```java
-// Get ModelComponent type
-Class<?> modelCompClass = Class.forName(
-    "com.hypixel.hytale.server.core.modules.entity.component.ModelComponent");
-Object modelCompType = modelCompClass.getMethod("getComponentType").invoke(null);
+import com.hypixel.hytale.component.ComponentType;
+import com.hypixel.hytale.server.core.modules.entity.component.ModelComponent;
+import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 
-// Get component from store
-Object modelComp = store.getComponent(entityRef, modelCompType);
+// Cache component type as static field
+private static final ComponentType<EntityStore, ModelComponent> MODEL_TYPE =
+    ModelComponent.getComponentType();
 
-// Extract modelAssetId
-Field modelField = modelCompClass.getDeclaredField("model");
+// Get component from store (no reflection for component type!)
+ModelComponent modelComp = store.getComponent(entityRef, MODEL_TYPE);
+
+// Extract modelAssetId (model field is private, so still needs reflection)
+Field modelField = ModelComponent.class.getDeclaredField("model");
 modelField.setAccessible(true);
 Object model = modelField.get(modelComp);
 
-Field assetIdField = model.getClass().getDeclaredField("modelAssetId");
-assetIdField.setAccessible(true);
-String modelAssetId = (String) assetIdField.get(model);  // e.g., "Cow", "Sheep"
+// Parse from toString: Model{modelAssetId='Cow', ...}
+String modelStr = model.toString();
+int start = modelStr.indexOf("modelAssetId='") + 14;
+int end = modelStr.indexOf("'", start);
+String modelAssetId = modelStr.substring(start, end);  // e.g., "Cow", "Sheep"
 ```
 
 ---
