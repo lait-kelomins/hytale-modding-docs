@@ -426,7 +426,7 @@ If you see these messages, your plugin loaded successfully!
 
 ### Deploy Script (Windows)
 
-For faster iteration, create a `deploy.ps1` script in your project root:
+For faster iteration, create a `deploy.ps1` script in your project root. This script uses environment variables so you only configure once:
 
 ```powershell
 # deploy.ps1 - Build and deploy script
@@ -436,15 +436,88 @@ For faster iteration, create a `deploy.ps1` script in your project root:
 $ErrorActionPreference = "Stop"
 
 # ============================================
-# CONFIGURATION - Edit these values
+# CONFIGURATION
+# Uses environment variables or prompts user
 # ============================================
-$JAVA_HOME = "C:\Program Files\Microsoft\jdk-21.0.x-hotspot"
-$PLUGIN_NAME = "my-hytale-plugin"
-$WORLD_NAME = "YourWorldName"
+
+function Get-ConfigValue {
+    param(
+        [string]$EnvVarName,
+        [string]$PromptMessage,
+        [string]$DefaultValue = ""
+    )
+
+    $value = [Environment]::GetEnvironmentVariable($EnvVarName, "User")
+
+    if ([string]::IsNullOrWhiteSpace($value)) {
+        Write-Host ""
+        Write-Host "Environment variable '$EnvVarName' is not set." -ForegroundColor Yellow
+
+        if ($DefaultValue) {
+            Write-Host "Default: $DefaultValue" -ForegroundColor DarkGray
+        }
+
+        $input = Read-Host $PromptMessage
+
+        if ([string]::IsNullOrWhiteSpace($input) -and $DefaultValue) {
+            $value = $DefaultValue
+        } else {
+            $value = $input
+        }
+
+        if ([string]::IsNullOrWhiteSpace($value)) {
+            Write-Host "Value cannot be empty. Exiting." -ForegroundColor Red
+            exit 1
+        }
+
+        $save = Read-Host "Save '$value' to environment variable '$EnvVarName'? (Y/n)"
+        if ($save -ne 'n' -and $save -ne 'N') {
+            [Environment]::SetEnvironmentVariable($EnvVarName, $value, "User")
+            Write-Host "Saved to user environment variables." -ForegroundColor Green
+        }
+    }
+
+    return $value
+}
+
+Write-Host ""
+Write-Host "============================================" -ForegroundColor Cyan
+Write-Host "       HYTALE PLUGIN DEPLOY SETUP          " -ForegroundColor Cyan
+Write-Host "============================================" -ForegroundColor Cyan
+
+# Use existing JAVA_HOME as default if available
+$javaDefault = if ($env:JAVA_HOME) { $env:JAVA_HOME } else { "C:\Program Files\Microsoft\jdk-21.0.9.10-hotspot" }
+$hytaleInstallDefault = "C:\Users\$env:USERNAME\AppData\Roaming\Hytale";
+
+$JAVA_HOME = Get-ConfigValue -EnvVarName "HYTALE_JAVA_HOME" `
+    -PromptMessage "Enter Java 21 home path" `
+    -DefaultValue $javaDefault
+
+$PLUGIN_NAME = Get-ConfigValue -EnvVarName "HYTALE_PLUGIN_NAME" `
+    -PromptMessage "Enter plugin name (jar filename without version)" `
+    -DefaultValue "my-mod"
+
+$HYTALE_INSTALL_PATH = Get-ConfigValue -EnvVarName "HYTALE_INSTALL_PATH" `
+    -PromptMessage "Enter Hytale install path" `
+    -DefaultValue $hytaleInstallDefault
+
+# Optional server path
+$SERVER_PATH = [Environment]::GetEnvironmentVariable("HYTALE_SERVER_PATH", "User")
+
+if ([string]::IsNullOrWhiteSpace($SERVER_PATH)) {
+    Write-Host ""
+    $addServer = Read-Host "Do you want to add a server mods path? (y/N)"
+    if ($addServer -eq 'y' -or $addServer -eq 'Y') {
+        $SERVER_PATH = Get-ConfigValue -EnvVarName "HYTALE_SERVER_PATH" `
+            -PromptMessage "Enter server mods path (e.g., C:\HytaleServer\mods)"
+    }
+}
+
 # ============================================
 
 $env:JAVA_HOME = $JAVA_HOME
-$dest = "$env:APPDATA\Hytale\UserData\Saves\$WORLD_NAME\Mods"
+$dest = "$HYTALE_INSTALL_PATH\UserData\Mods"
+$serverDest = $SERVER_PATH
 
 function Deploy {
     Clear-Host
@@ -496,13 +569,36 @@ function Deploy {
         }
     }
 
-    # Copy new JAR
+    # Copy new JAR to client
     $source = "build\libs\$PLUGIN_NAME-$version.jar"
     $destFile = Join-Path $dest "$PLUGIN_NAME-$version.jar"
     Copy-Item $source $destFile -Force
 
     Write-Host ""
-    Write-Host "DEPLOYED: $destFile" -ForegroundColor Green
+    Write-Host "DEPLOYED (client): $destFile" -ForegroundColor Green
+
+    # Copy to server if configured
+    if (-not [string]::IsNullOrWhiteSpace($serverDest)) {
+        if (-not (Test-Path $serverDest)) {
+            New-Item -ItemType Directory -Path $serverDest -Force | Out-Null
+            Write-Host "Created server Mods folder" -ForegroundColor Yellow
+        }
+
+        # Delete old versions from server
+        $oldServerJars = Get-ChildItem -Path $serverDest -Filter "$PLUGIN_NAME*.jar" -ErrorAction SilentlyContinue
+        foreach ($jar in $oldServerJars) {
+            try {
+                Remove-Item $jar.FullName -Force -ErrorAction Stop
+                Write-Host "Deleted old (server): $($jar.Name)" -ForegroundColor DarkYellow
+            } catch {
+                Write-Host "Could not delete $($jar.Name) from server (in use)" -ForegroundColor DarkYellow
+            }
+        }
+
+        $serverDestFile = Join-Path $serverDest "$PLUGIN_NAME-$version.jar"
+        Copy-Item $source $serverDestFile -Force
+        Write-Host "DEPLOYED (server): $serverDestFile" -ForegroundColor Green
+    }
     Write-Host ""
     Write-Host "Reload commands:" -ForegroundColor Yellow
     Write-Host "  /plugin unload YourOrg:MyPlugin" -ForegroundColor DarkGray
@@ -548,12 +644,11 @@ while ($true) {
 }
 ```
 
-**Setup:**
-1. Save as `deploy.ps1` in your project root
-2. Edit the configuration section at the top:
-   - `$JAVA_HOME` - Path to your JDK 21
-   - `$PLUGIN_NAME` - Your JAR name (without version/extension)
-   - `$WORLD_NAME` - Your world folder name
+**First run:** The script will prompt for configuration values and offer to save them as user environment variables:
+- `HYTALE_JAVA_HOME` - Path to your JDK 21
+- `HYTALE_PLUGIN_NAME` - Your JAR name (without version/extension)
+- `HYTALE_INSTALL_PATH` - Hytale install path
+- `HYTALE_SERVER_PATH` - (Optional) Server mods path for dual deployment
 
 **Usage:**
 ```powershell
@@ -561,6 +656,11 @@ while ($true) {
 ```
 
 Then press **SPACE** to build and deploy, **Q** to quit.
+
+**Features:**
+- Auto-saves configuration to user environment variables
+- Deploys to both client and server (if configured)
+- Cleans old JAR versions before deploying
 
 **Verify:** After deploying, reload in-game:
 ```
