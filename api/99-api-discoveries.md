@@ -490,6 +490,65 @@ SoundUtil.playSoundEvent3d(soundId, SoundCategory.SFX,
 
 ---
 
+## Entity Spawn Detection (VERIFIED)
+
+Use `EntityTickingSystem` with `NewSpawnComponent` query for real-time spawn detection.
+
+### Import
+```java
+import com.hypixel.hytale.component.system.tick.EntityTickingSystem;
+```
+
+### Implementation Pattern
+```java
+public class SpawnDetector extends EntityTickingSystem<EntityStore> {
+    private static final ComponentType<EntityStore, ModelComponent> MODEL_TYPE =
+        ModelComponent.getComponentType();
+
+    // NewSpawnComponent requires reflection
+    private static ComponentType<EntityStore, ?> newSpawnType = null;
+
+    public SpawnDetector() {
+        super();
+        try {
+            Class<?> cls = Class.forName(
+                "com.hypixel.hytale.server.core.modules.entity.component.NewSpawnComponent");
+            newSpawnType = (ComponentType<EntityStore, ?>) cls.getMethod("getComponentType").invoke(null);
+        } catch (Exception e) { /* fallback to periodic scan */ }
+    }
+
+    @Override
+    public void tick(float deltaTime, int entityIndex,
+                     ArchetypeChunk<EntityStore> chunk,
+                     Store<EntityStore> store,
+                     CommandBuffer<EntityStore> buffer) {
+        // Check if entity has NewSpawnComponent
+        if (newSpawnType == null) return;
+        Object comp = chunk.getComponent(entityIndex, newSpawnType);
+        if (comp == null) return;
+
+        // Get entity ref and model
+        Ref<EntityStore> ref = chunk.getReferenceTo(entityIndex);
+        ModelComponent model = chunk.getComponent(entityIndex, MODEL_TYPE);
+
+        // Process newly spawned entity...
+    }
+
+    @Override
+    public Query<EntityStore> getQuery() {
+        // Query for entities with NewSpawnComponent
+        return newSpawnType != null ? newSpawnType : MODEL_TYPE;
+    }
+}
+
+// Register in setup():
+getEntityStoreRegistry().registerSystem(new SpawnDetector());
+```
+
+> **Key insight:** `NewSpawnComponent` is added by the engine when entities spawn and removed after internal processing. Query for it to detect spawns in real-time.
+
+---
+
 ## TODO: Continue discovering
 - [x] How to access world from player - Use `ctx.sender().getWorld()`
 - [x] How to iterate all entities in a world - Use `World.execute()` + `Store.forEachChunk()`
@@ -498,6 +557,6 @@ SoundUtil.playSoundEvent3d(soundId, SoundCategory.SFX,
 - [x] Attach custom interaction to animals at runtime - Works via `setInteractionId()` + asset files
 - [x] Particle system spawning - Use `ParticleUtil.spawnParticleEffect()` + asset files
 - [x] Sound system - Use `SoundUtil.playSoundEvent3d()` with `SoundCategory`
+- [x] Entity spawn detection - Use `EntityTickingSystem` + `NewSpawnComponent` query
 - [ ] Figure out `*` prefix mechanism for code-registered interactions
-- [ ] Find proper entity spawn detection (NewSpawnComponent + TickingSystem?)
 - [ ] NPC Role asset overrides for interactions (instead of runtime modification)

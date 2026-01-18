@@ -64,6 +64,69 @@ public Query<EntityStore> getQuery() {
 
 ---
 
+## EntityTickingSystem (VERIFIED)
+
+For periodic processing of entities (e.g., detecting spawns, updating state). Runs every tick on matching entities.
+
+### Import
+```java
+import com.hypixel.hytale.component.system.tick.EntityTickingSystem;
+```
+
+### Signature
+```java
+public abstract class EntityTickingSystem<S extends Store>
+```
+
+### Methods to Implement
+```java
+public class MyTickingSystem extends EntityTickingSystem<EntityStore> {
+
+    public MyTickingSystem() {
+        super();
+    }
+
+    @Override
+    public void tick(
+        float deltaTime,                        // Time since last tick
+        int entityIndex,                        // Index in chunk
+        ArchetypeChunk<EntityStore> chunk,      // Entity data
+        Store<EntityStore> store,               // World store
+        CommandBuffer<EntityStore> buffer       // Deferred commands
+    ) {
+        // Your per-entity logic here
+    }
+
+    @Override
+    public Query<EntityStore> getQuery() {
+        return MyComponent.getComponentType();  // Only entities with MyComponent
+    }
+}
+```
+
+### Use Case: Spawn Detection
+Query for `NewSpawnComponent` to detect newly spawned entities:
+```java
+// NewSpawnComponent is added by engine on entity creation
+Class<?> cls = Class.forName(
+    "com.hypixel.hytale.server.core.modules.entity.component.NewSpawnComponent");
+ComponentType<EntityStore, ?> spawnType =
+    (ComponentType<EntityStore, ?>) cls.getMethod("getComponentType").invoke(null);
+
+// Return as query to only tick on newly spawned entities
+return spawnType;
+```
+
+### Registration
+```java
+@Override
+protected void setup() {
+    getEntityStoreRegistry().registerSystem(new MyTickingSystem());
+}
+```
+
+---
+
 ## Components
 
 Entities are collections of components. Access components from the ArchetypeChunk.

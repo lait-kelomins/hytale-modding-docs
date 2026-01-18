@@ -798,34 +798,52 @@ private void onPlayerChat(PlayerChatEvent event) {
 | `LATE` | 10922 | Logging, analytics |
 | `LAST` | 21844 | Cleanup, fallback |
 
-### PlayerMouseButtonEvent (Recommended for Clicks)
+### PlayerMouseButtonEvent (NOT Recommended for Entity Clicks)
+
+> **WARNING:** `PlayerMouseButtonEvent` does NOT reliably fire for entity interactions during normal gameplay. It only works when the mouse cursor is unlocked (in menus). For entity interactions, use the **Interaction System** instead (see [06-interactions.md](api/06-interactions.md)).
 
 ```java
+// This does NOT work reliably for entity clicks during gameplay!
+// Use SimpleInteraction + Interactions component instead.
+
 getEventRegistry().register(PlayerMouseButtonEvent.class, event -> {
+    // Only works in menu/unlocked-cursor situations
     Player player = event.getPlayer();
     MouseButtonType button = event.getMouseButton().mouseButtonType;
-    Entity targetEntity = event.getTargetEntity();   // Can be null
-    Item heldItem = event.getItemInHand();           // Item config (not ItemStack)
-
-    if (button == MouseButtonType.Right && targetEntity != null) {
-        // Right-clicked on an entity
-        String itemId = heldItem != null ? heldItem.getId() : "empty hand";
-        getLogger().atInfo().log("Right-clicked with %s", itemId);
-
-        // Cancel to prevent default behavior
-        event.setCancelled(true);
-    }
+    // ...
 });
 ```
 
-### MouseButtonType Values
+### Recommended: Use Interaction System for Entity Clicks
 
-| Value | Description |
-|-------|-------------|
-| `MouseButtonType.Left` | Left click |
-| `MouseButtonType.Right` | Right click |
-| `MouseButtonType.Middle` | Middle click |
-| `MouseButtonType.X1`, `X2` | Extra mouse buttons |
+Instead of `PlayerMouseButtonEvent`, create a custom `SimpleInteraction` and attach it to entities:
+
+```java
+// 1. Create custom interaction class
+public class MyEntityInteraction extends SimpleInteraction {
+    public static final BuilderCodec<MyEntityInteraction> CODEC =
+        BuilderCodec.builder(MyEntityInteraction.class, MyEntityInteraction::new, SimpleInteraction.CODEC)
+            .build();
+
+    @Override
+    protected void tick0(boolean firstRun, float time, InteractionType type,
+                         InteractionContext context, CooldownHandler cooldownHandler) {
+        if (firstRun) {
+            Ref<EntityStore> target = context.getTargetEntity();
+            ItemStack heldItem = context.getHeldItem();
+            // Your custom logic here
+        }
+        super.tick0(firstRun, time, type, context, cooldownHandler);
+    }
+}
+
+// 2. Register in setup()
+getCodecMapRegistry().register("MyEntityInteraction", MyEntityInteraction.class, MyEntityInteraction.CODEC);
+
+// 3. Create asset files and attach to entities via Interactions component
+```
+
+See [06-interactions.md](api/06-interactions.md) for complete details.
 
 ---
 

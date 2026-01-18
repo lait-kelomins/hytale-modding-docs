@@ -208,11 +208,12 @@ public class MyCustomInteraction extends SimpleInteraction {
 // Server/Item/RootInteractions/Root_MyCustom.json
 {
   "Interactions": ["MyCustomInteraction"],
-  "RequireNewClick": true
+  "RequireNewClick": true,
+  "NeedsRemoteSync": true
 }
 ```
 
-> **Note:** Use `"Interactions"` (not `"InteractionIds"`). The `"NeedsRemoteSync"` field is optional.
+> **Note:** Use `"Interactions"` (not `"InteractionIds"`). The `"NeedsRemoteSync"` field controls client-server synchronization (default: false).
 
 ### Interaction Asset Example
 
