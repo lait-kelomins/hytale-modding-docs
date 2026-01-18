@@ -355,16 +355,11 @@ JAVA_HOME=/path/to/jdk21 ./gradlew build -x test
 
 ### Deploy
 
-Copy the JAR from `build/libs/` to your server's Mods folder:
+Copy the JAR from `build/libs/` to the `Mods` folder inside your world's save directory.
 
 **Windows:**
 ```
-%APPDATA%\Hytale\Userdata\Saves\<world_name>\Mods\
-```
-
-**Linux/Mac:**
-```
-~/.hytale/Userdata/Saves/<world_name>/Mods/
+%APPDATA%\Hytale\UserData\Saves\<world_name>\Mods\
 ```
 
 ---
