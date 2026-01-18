@@ -342,9 +342,9 @@ See [How To: Add Custom Sounds](api/api-empirical-how-tos.md#how-to-add-custom-s
 
 ### Windows
 
-```cmd
-set JAVA_HOME=C:\path\to\jdk-21
-gradlew.bat build -x test
+```powershell
+$env:JAVA_HOME = "C:\Program Files\Microsoft\jdk-21.0.x-hotspot"
+.\gradlew.bat build -x test
 ```
 
 ### Linux/Mac
@@ -355,10 +355,16 @@ JAVA_HOME=/path/to/jdk21 ./gradlew build -x test
 
 ### Deploy
 
-Copy the JAR from `build/libs/` to your server's mods folder:
+Copy the JAR from `build/libs/` to your server's Mods folder:
 
+**Windows:**
 ```
-%APPDATA%/Hytale/userdata/saves/<world_name>/mods/
+%APPDATA%\Hytale\Userdata\Saves\<world_name>\Mods\
+```
+
+**Linux/Mac:**
+```
+~/.hytale/Userdata/Saves/<world_name>/Mods/
 ```
 
 ---
