@@ -399,12 +399,105 @@ interactionsComp.setInteractionId(InteractionType.Secondary, "MyCustomInteractio
 
 ---
 
+---
+
+## Particle System (VERIFIED)
+
+### Imports
+```java
+import com.hypixel.hytale.server.core.universe.world.ParticleUtil;
+```
+
+### Spawning Particles
+```java
+Vector3d position = new Vector3d(x, y, z);
+
+// Use reflection to find correct method signature
+for (Method method : ParticleUtil.class.getMethods()) {
+    if (method.getName().equals("spawnParticleEffect") && method.getParameterCount() == 3) {
+        Class<?>[] params = method.getParameterTypes();
+        if (params[0] == String.class && params[1] == Vector3d.class) {
+            method.invoke(null, "MyParticleSystem", position, store);
+            break;
+        }
+    }
+}
+```
+
+### Custom Particle Assets
+
+**ParticleSystem:** `Server/Particles/MyParticle.particlesystem`
+```json
+{
+  "Spawners": [
+    {
+      "SpawnerId": "MyParticle",
+      "PositionOffset": { "X": 0, "Y": 0.4, "Z": -0.1 },
+      "FixedRotation": false
+    }
+  ],
+  "LifeSpan": 1
+}
+```
+
+> **IMPORTANT:** Use `"Spawners"` array, NOT a direct `"SpawnerId"` field!
+
+**ParticleSpawner:** `Server/Particles/Spawners/MyParticle.particlespawner`
+```json
+{
+  "ParticleLifeSpan": { "Min": 0.8, "Max": 1 },
+  "SpawnRate": { "Min": 5, "Max": 10 },
+  "MaxConcurrentParticles": 5,
+  "Particle": {
+    "Texture": "Particles/Textures/Shapes/Hearts_HiRes.png",
+    "FrameSize": { "Width": 64, "Height": 64 },
+    "Animation": {
+      "0": { "Color": "#fbbbfc", "Opacity": 1 },
+      "100": { "Color": "#e296e3", "Opacity": 1 }
+    }
+  }
+}
+```
+
+### Animation Keyframes
+
+Animation uses percentage-based keyframes (0-100):
+- `"0"` - Start of animation
+- `"100"` - End of animation
+
+Properties: `Color`, `Opacity`, `Scale`, `Rotation`, `FrameIndex`
+
+---
+
+## Sound System (VERIFIED)
+
+### Imports
+```java
+import com.hypixel.hytale.server.core.asset.type.soundevent.config.SoundEvent;
+import com.hypixel.hytale.server.core.universe.world.SoundUtil;
+import com.hypixel.hytale.protocol.SoundCategory;
+```
+
+### Playing 3D Sounds
+```java
+int soundId = SoundEvent.getAssetMap().getIndex("SFX_Consume_Bread");
+Vector3d pos = transform.getPosition();
+
+// Direct call (works)
+SoundUtil.playSoundEvent3d(soundId, SoundCategory.SFX,
+    pos.getX(), pos.getY(), pos.getZ(), store);
+```
+
+---
+
 ## TODO: Continue discovering
 - [x] How to access world from player - Use `ctx.sender().getWorld()`
 - [x] How to iterate all entities in a world - Use `World.execute()` + `Store.forEachChunk()`
 - [x] How to identify entity types - Use `ModelComponent.model.modelAssetId`
 - [x] Interactions component location - Index 73, has `setInteractionId()`
 - [x] Attach custom interaction to animals at runtime - Works via `setInteractionId()` + asset files
+- [x] Particle system spawning - Use `ParticleUtil.spawnParticleEffect()` + asset files
+- [x] Sound system - Use `SoundUtil.playSoundEvent3d()` with `SoundCategory`
 - [ ] Figure out `*` prefix mechanism for code-registered interactions
 - [ ] Find proper entity spawn detection (NewSpawnComponent + TickingSystem?)
 - [ ] NPC Role asset overrides for interactions (instead of runtime modification)

@@ -95,6 +95,41 @@ Components provide a static `getComponentType()` method:
 ComponentType<PlayerRef> type = PlayerRef.getComponentType();
 ```
 
+### Direct vs Reflection Access
+
+> **VERIFIED:** Some components work with direct `getComponentType()` calls, others require reflection.
+
+**Direct Access (works):**
+```java
+import com.hypixel.hytale.server.core.modules.entity.component.TransformComponent;
+import com.hypixel.hytale.server.core.modules.entity.component.ModelComponent;
+import com.hypixel.hytale.server.core.entity.UUIDComponent;
+
+// Cache as static fields for performance
+private static final ComponentType<EntityStore, TransformComponent> TRANSFORM_TYPE =
+    TransformComponent.getComponentType();
+private static final ComponentType<EntityStore, ModelComponent> MODEL_TYPE =
+    ModelComponent.getComponentType();
+private static final ComponentType<EntityStore, UUIDComponent> UUID_TYPE =
+    UUIDComponent.getComponentType();
+
+// Usage
+TransformComponent transform = store.getComponent(entityRef, TRANSFORM_TYPE);
+```
+
+**Require Reflection:**
+```java
+import com.hypixel.hytale.server.core.modules.entity.component.Interactable;
+import com.hypixel.hytale.server.core.modules.interaction.Interactions;
+
+// These require reflection for getComponentType()
+Object interactableType = Interactable.class.getMethod("getComponentType").invoke(null);
+Object interactionsType = Interactions.class.getMethod("getComponentType").invoke(null);
+
+// Then use with store
+Object interactions = store.ensureAndGetComponent(entityRef, interactionsType);
+```
+
 ---
 
 ## Query System

@@ -207,20 +207,27 @@ public class MyCustomInteraction extends SimpleInteraction {
 ```json
 // Server/Item/RootInteractions/Root_MyCustom.json
 {
-  "InteractionIds": ["MyCustomInteraction"],
-  "RequireNewClick": true,
-  "NeedsRemoteSync": true
+  "Interactions": ["MyCustomInteraction"],
+  "RequireNewClick": true
 }
 ```
+
+> **Note:** Use `"Interactions"` (not `"InteractionIds"`). The `"NeedsRemoteSync"` field is optional.
 
 ### Interaction Asset Example
 
 ```json
 // Server/Item/Interactions/MyCustomInteraction.json
 {
-  "Type": "MyCustomInteraction"
+  "Type": "MyCustomInteraction",
+  "Effects": {
+    "ItemAnimationId": "Eat",
+    "WaitForAnimationToFinish": true
+  }
 }
 ```
+
+> **Note:** The `"Effects"` block is optional. Use `"ItemAnimationId"` for animations like `"Eat"`, `"Swing"`, etc.
 
 ---
 
