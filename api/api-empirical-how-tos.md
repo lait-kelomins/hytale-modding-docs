@@ -86,6 +86,94 @@ public class MyPlugin extends JavaPlugin {
 
 ---
 
+## How To: Broadcast Debug Logs to In-Game Chat
+
+For easier debugging during development, you can broadcast logs directly to the game chat instead of checking the server console. This is essential for debugging entity interactions, spawn detection, or any logic that happens in the world.
+
+```java
+import com.hypixel.hytale.server.core.universe.Universe;
+import com.hypixel.hytale.server.core.universe.world.World;
+import com.hypixel.hytale.server.core.Message;
+
+public class MyPlugin extends JavaPlugin {
+    private static MyPlugin instance;
+    private static boolean devMode = false;
+    private static boolean verboseLogging = false;
+
+    public static MyPlugin getInstance() { return instance; }
+    public static boolean isDevMode() { return devMode; }
+    public static void setDevMode(boolean enabled) { devMode = enabled; }
+    public static boolean isVerboseLogging() { return verboseLogging; }
+    public static void setVerboseLogging(boolean enabled) { verboseLogging = enabled; }
+
+    public MyPlugin(JavaPluginInit init) {
+        super(init);
+        instance = this;
+    }
+
+    /** Log verbose message - also broadcasts to chat when devMode is enabled */
+    private void logVerbose(String message) {
+        if (verboseLogging) {
+            getLogger().atInfo().log("[MyPlugin] " + message);
+            if (devMode) {
+                broadcastToChat(message);
+            }
+        }
+    }
+
+    /** Broadcast a message to all online players in chat */
+    private void broadcastToChat(String message) {
+        try {
+            World world = Universe.get().getDefaultWorld();
+            if (world == null) return;
+
+            world.getPlayers().forEach(player -> {
+                try {
+                    player.sendMessage(Message.raw("[Debug] " + message).color("#AAAAAA"));
+                } catch (Exception e) {
+                    // Silent
+                }
+            });
+        } catch (Exception e) {
+            // Silent
+        }
+    }
+
+    @Override
+    protected void start() {
+        getCommandRegistry().registerCommand(new DebugModeCommand());
+    }
+
+    /** Toggle command - enables both verbose logging and chat broadcasting */
+    public static class DebugModeCommand extends AbstractCommand {
+        public DebugModeCommand() {
+            super("mydebug", "Toggle in-game chat logging");
+        }
+
+        @Override
+        protected CompletableFuture<Void> execute(CommandContext ctx) {
+            boolean newState = !MyPlugin.isDevMode();
+            MyPlugin.setDevMode(newState);
+            MyPlugin.setVerboseLogging(newState);  // Enable both together
+
+            String statusColor = newState ? "#55FF55" : "#FF5555";
+            String statusText = newState ? "ENABLED" : "DISABLED";
+            ctx.sendMessage(Message.raw("Chat logging ").color("#AAAAAA")
+                .insert(Message.raw(statusText).color(statusColor)));
+
+            if (newState) {
+                ctx.sendMessage(Message.raw("All debug messages will now appear in chat.").color("#FFAA00"));
+            }
+            return CompletableFuture.completedFuture(null);
+        }
+    }
+}
+```
+
+> **Tip:** Just type `/mydebug` in-game to toggle. All `logVerbose()` calls will then appear in chat.
+
+---
+
 ## How To: Register Commands with Typed Arguments
 
 ### Basic Command
@@ -899,94 +987,6 @@ public class MyPlugin extends JavaPlugin {
     }
 }
 ```
-
----
-
-## How To: Broadcast Debug Logs to In-Game Chat
-
-For easier debugging during development, you can broadcast logs directly to the game chat instead of checking the server console.
-
-```java
-import com.hypixel.hytale.server.core.universe.Universe;
-import com.hypixel.hytale.server.core.universe.world.World;
-import com.hypixel.hytale.server.core.Message;
-
-public class MyPlugin extends JavaPlugin {
-    private static MyPlugin instance;
-    private static boolean devMode = false;
-    private static boolean verboseLogging = false;
-
-    public static MyPlugin getInstance() { return instance; }
-    public static boolean isDevMode() { return devMode; }
-    public static void setDevMode(boolean enabled) { devMode = enabled; }
-    public static boolean isVerboseLogging() { return verboseLogging; }
-    public static void setVerboseLogging(boolean enabled) { verboseLogging = enabled; }
-
-    public MyPlugin(JavaPluginInit init) {
-        super(init);
-        instance = this;
-    }
-
-    /** Log verbose message - also broadcasts to chat when devMode is enabled */
-    private void logVerbose(String message) {
-        if (verboseLogging) {
-            getLogger().atInfo().log("[MyPlugin] " + message);
-            if (devMode) {
-                broadcastToChat(message);
-            }
-        }
-    }
-
-    /** Broadcast a message to all online players in chat */
-    private void broadcastToChat(String message) {
-        try {
-            World world = Universe.get().getDefaultWorld();
-            if (world == null) return;
-
-            world.getPlayers().forEach(player -> {
-                try {
-                    player.sendMessage(Message.raw("[Debug] " + message).color("#AAAAAA"));
-                } catch (Exception e) {
-                    // Silent
-                }
-            });
-        } catch (Exception e) {
-            // Silent
-        }
-    }
-
-    @Override
-    protected void start() {
-        getCommandRegistry().registerCommand(new DebugModeCommand());
-    }
-
-    /** Toggle command - enables both verbose logging and chat broadcasting */
-    public static class DebugModeCommand extends AbstractCommand {
-        public DebugModeCommand() {
-            super("mydebug", "Toggle in-game chat logging");
-        }
-
-        @Override
-        protected CompletableFuture<Void> execute(CommandContext ctx) {
-            boolean newState = !MyPlugin.isDevMode();
-            MyPlugin.setDevMode(newState);
-            MyPlugin.setVerboseLogging(newState);  // Enable both together
-
-            String statusColor = newState ? "#55FF55" : "#FF5555";
-            String statusText = newState ? "ENABLED" : "DISABLED";
-            ctx.sendMessage(Message.raw("Chat logging ").color("#AAAAAA")
-                .insert(Message.raw(statusText).color(statusColor)));
-
-            if (newState) {
-                ctx.sendMessage(Message.raw("All debug messages will now appear in chat.").color("#FFAA00"));
-            }
-            return CompletableFuture.completedFuture(null);
-        }
-    }
-}
-```
-
-> **Tip:** This is very useful for debugging entity interactions, spawn detection, or any logic that happens away from the console. Just type `/mydebug` in-game to toggle.
 
 ---
 
