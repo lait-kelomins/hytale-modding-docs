@@ -17,16 +17,33 @@ A quick start guide for creating Hytale server plugins.
 
 #### Windows
 
+**Option 1: Package Manager (recommended)**
+
+```powershell
+# Chocolatey
+choco install microsoft-openjdk21
+
+# Scoop
+scoop bucket add java
+scoop install openjdk21
+
+# winget
+winget install Microsoft.OpenJDK.21
+```
+
+**Option 2: Manual Install**
+
 1. Download from [Microsoft OpenJDK](https://learn.microsoft.com/en-us/java/openjdk/download#openjdk-21) or [Adoptium](https://adoptium.net/temurin/releases/?version=21)
 2. Run the installer
 3. Set `JAVA_HOME` environment variable:
    ```cmd
    setx JAVA_HOME "C:\Program Files\Microsoft\jdk-21.0.x-hotspot"
    ```
-4. Verify installation:
-   ```cmd
-   java -version
-   ```
+
+**Verify installation:**
+```cmd
+java -version
+```
 
 #### macOS
 
@@ -60,16 +77,32 @@ java -version
 
 #### Windows
 
+**Option 1: Package Manager (recommended)**
+
+```powershell
+# Chocolatey
+choco install gradle
+
+# Scoop
+scoop install gradle
+
+# winget
+winget install Gradle.Gradle
+```
+
+**Option 2: Manual Install**
+
 1. Download from [gradle.org/releases](https://gradle.org/releases/)
 2. Extract to `C:\Gradle\gradle-9.x`
 3. Add to PATH:
    ```cmd
    setx PATH "%PATH%;C:\Gradle\gradle-9.x\bin"
    ```
-4. Verify:
-   ```cmd
-   gradle -version
-   ```
+
+**Verify installation:**
+```cmd
+gradle -version
+```
 
 #### macOS
 
