@@ -424,6 +424,152 @@ If you see these messages, your plugin loaded successfully!
 
 ---
 
+### Deploy Script (Windows)
+
+For faster iteration, create a `deploy.ps1` script in your project root:
+
+```powershell
+# deploy.ps1 - Build and deploy script
+# Usage: .\deploy.ps1
+# Interactive mode: Press SPACE to deploy, Q to quit
+
+$ErrorActionPreference = "Stop"
+
+# ============================================
+# CONFIGURATION - Edit these values
+# ============================================
+$JAVA_HOME = "C:\Program Files\Microsoft\jdk-21.0.x-hotspot"
+$PLUGIN_NAME = "my-hytale-plugin"
+$WORLD_NAME = "YourWorldName"
+# ============================================
+
+$env:JAVA_HOME = $JAVA_HOME
+$dest = "$env:APPDATA\Hytale\UserData\Saves\$WORLD_NAME\Mods"
+
+function Deploy {
+    Clear-Host
+    Write-Host ""
+    Write-Host "============================================" -ForegroundColor Cyan
+    Write-Host "            DEPLOYING PLUGIN                " -ForegroundColor Cyan
+    Write-Host "============================================" -ForegroundColor Cyan
+    Write-Host ""
+
+    # Read version from build.gradle
+    $buildGradle = Get-Content "build.gradle" -Raw
+    if ($buildGradle -match "version\s*=\s*'([^']+)'") {
+        $version = $matches[1]
+    } else {
+        Write-Host "Could not read version from build.gradle" -ForegroundColor Red
+        return $false
+    }
+
+    Write-Host "Plugin: $PLUGIN_NAME" -ForegroundColor Yellow
+    Write-Host "Version: $version" -ForegroundColor Yellow
+    Write-Host ""
+
+    # Build
+    Write-Host "Building..." -ForegroundColor Yellow
+    & .\gradlew.bat build -x test --no-daemon -q
+
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host ""
+        Write-Host "BUILD FAILED!" -ForegroundColor Red
+        return $false
+    }
+
+    Write-Host "Build successful!" -ForegroundColor Green
+
+    # Create mods folder if needed
+    if (-not (Test-Path $dest)) {
+        New-Item -ItemType Directory -Path $dest -Force | Out-Null
+        Write-Host "Created Mods folder" -ForegroundColor Yellow
+    }
+
+    # Delete old versions
+    $oldJars = Get-ChildItem -Path $dest -Filter "$PLUGIN_NAME*.jar" -ErrorAction SilentlyContinue
+    foreach ($jar in $oldJars) {
+        try {
+            Remove-Item $jar.FullName -Force -ErrorAction Stop
+            Write-Host "Deleted old: $($jar.Name)" -ForegroundColor DarkYellow
+        } catch {
+            Write-Host "Could not delete $($jar.Name) (in use)" -ForegroundColor DarkYellow
+        }
+    }
+
+    # Copy new JAR
+    $source = "build\libs\$PLUGIN_NAME-$version.jar"
+    $destFile = Join-Path $dest "$PLUGIN_NAME-$version.jar"
+    Copy-Item $source $destFile -Force
+
+    Write-Host ""
+    Write-Host "DEPLOYED: $destFile" -ForegroundColor Green
+    Write-Host ""
+    Write-Host "Reload commands:" -ForegroundColor Yellow
+    Write-Host "  /plugin unload YourOrg:MyPlugin" -ForegroundColor DarkGray
+    Write-Host "  /plugin load YourOrg:MyPlugin" -ForegroundColor DarkGray
+    Write-Host ""
+
+    return $true
+}
+
+function ShowPrompt {
+    Write-Host "============================================" -ForegroundColor DarkCyan
+    Write-Host "  Press [SPACE] to deploy  |  [Q] to quit  " -ForegroundColor White
+    Write-Host "============================================" -ForegroundColor DarkCyan
+}
+
+# Main
+Clear-Host
+Write-Host ""
+Write-Host "  HYTALE PLUGIN DEPLOY WATCHER" -ForegroundColor Cyan
+Write-Host ""
+ShowPrompt
+
+while ($true) {
+    if ([Console]::KeyAvailable) {
+        $key = [Console]::ReadKey($true)
+
+        if ($key.Key -eq [ConsoleKey]::Spacebar) {
+            $success = Deploy
+            if ($success) {
+                Write-Host "Deployed at $(Get-Date -Format 'HH:mm:ss')" -ForegroundColor Green
+            } else {
+                Write-Host "Failed at $(Get-Date -Format 'HH:mm:ss')" -ForegroundColor Red
+            }
+            Write-Host ""
+            ShowPrompt
+        }
+        elseif ($key.Key -eq [ConsoleKey]::Q) {
+            Write-Host "Exiting..." -ForegroundColor Yellow
+            break
+        }
+    }
+    Start-Sleep -Milliseconds 100
+}
+```
+
+**Setup:**
+1. Save as `deploy.ps1` in your project root
+2. Edit the configuration section at the top:
+   - `$JAVA_HOME` - Path to your JDK 21
+   - `$PLUGIN_NAME` - Your JAR name (without version/extension)
+   - `$WORLD_NAME` - Your world folder name
+
+**Usage:**
+```powershell
+.\deploy.ps1
+```
+
+Then press **SPACE** to build and deploy, **Q** to quit.
+
+**Verify:** After deploying, reload in-game:
+```
+/plugin unload YourOrg:MyPlugin
+/plugin load YourOrg:MyPlugin
+```
+
+---
+
 ## Adding Features
 
 ### Event Listener
