@@ -15,3 +15,6 @@
   - [Items & Inventory](api/06-items.md)
   - [Interactions](api/06-interactions.md)
   - [Blocks](api/07-blocks.md)
+
+- **Experimental**
+  - [Untested Systems](api/99-experimental.md)
