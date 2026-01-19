@@ -549,6 +549,147 @@ getEntityStoreRegistry().registerSystem(new SpawnDetector());
 
 ---
 
+## Movement System (VERIFIED)
+
+### Overview
+
+The player movement system consists of several interconnected components:
+
+| Component | Class Path | Purpose |
+|-----------|------------|---------|
+| MovementManager | `com.hypixel.hytale.server.core.entity.entities.player.movement.MovementManager` | ECS component that manages player movement |
+| MovementSettings | `com.hypixel.hytale.protocol.MovementSettings` | Protocol class containing movement parameters |
+| MovementStatesComponent | `com.hypixel.hytale.server.core.entity.movement.MovementStatesComponent` | ECS component tracking movement state |
+| MovementStates | `com.hypixel.hytale.protocol.MovementStates` | Protocol class with movement state flags |
+
+### MovementManager (ECS Component)
+
+Access via store:
+```java
+Class<?> mmClass = Class.forName("com.hypixel.hytale.server.core.entity.entities.player.movement.MovementManager");
+Object compType = mmClass.getMethod("getComponentType").invoke(null);
+Object movementManager = store.getComponent(playerRef, (ComponentType) compType);
+```
+
+**Methods:**
+- `getSettings()` → MovementSettings - Get movement parameters
+- `update(PacketHandler)` → void - Sync to client (expects `com.hypixel.hytale.server.core.io.PacketHandler`)
+
+### MovementSettings Fields (Protocol)
+
+All public fields on `com.hypixel.hytale.protocol.MovementSettings`:
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `canFly` | boolean | false | Enables flight (double-tap space) |
+| `horizontalFlySpeed` | float | 10.32 | Horizontal fly speed |
+| `verticalFlySpeed` | float | 10.32 | Vertical fly speed |
+| `baseSpeed` | float | 5.5 | Base movement speed |
+| `mass` | float | 68.0 | Player mass for physics |
+| `jumpForce` | float | 11.8 | Jump strength |
+| `invertedGravity` | boolean | false | Flip gravity |
+| `collisionExpulsionForce` | float | 0.02 | Force when colliding |
+
+**Speed Multipliers:**
+- `forwardWalkSpeedMultiplier`, `backwardWalkSpeedMultiplier`, `strafeWalkSpeedMultiplier` (0.3)
+- `forwardRunSpeedMultiplier` (1.0), `backwardRunSpeedMultiplier` (0.65), `strafeRunSpeedMultiplier` (0.8)
+- `forwardCrouchSpeedMultiplier` (0.55), `forwardSprintSpeedMultiplier` (1.273)
+
+**Example - Enable Flight:**
+```java
+Method getSettings = movementManager.getClass().getMethod("getSettings");
+Object settings = getSettings.invoke(movementManager);
+settings.getClass().getField("canFly").setBoolean(settings, true);
+settings.getClass().getField("horizontalFlySpeed").setFloat(settings, 20.0f);
+settings.getClass().getField("verticalFlySpeed").setFloat(settings, 20.0f);
+```
+
+### MovementStates Fields (Protocol)
+
+State flags in `com.hypixel.hytale.protocol.MovementStates`:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `idle` | boolean | Player is stationary |
+| `horizontalIdle` | boolean | No horizontal movement |
+| `jumping` | boolean | Currently jumping |
+| `flying` | boolean | Currently in flight mode |
+| `walking` | boolean | Walking speed |
+| `running` | boolean | Running speed |
+| `sprinting` | boolean | Sprint key held |
+| `crouching` | boolean | Crouch key held |
+| `forcedCrouching` | boolean | Forced crouch (low ceiling) |
+| `falling` | boolean | In freefall |
+| `climbing` | boolean | On ladder/climbable |
+| `inFluid` | boolean | In water/liquid |
+| `swimming` | boolean | Swimming in liquid |
+| `swimJumping` | boolean | Jump while swimming |
+| `onGround` | boolean | Touching ground |
+| `mantling` | boolean | Climbing over ledge |
+| `sliding` | boolean | Slide action |
+| `mounting` | boolean | On mount |
+| `rolling` | boolean | Roll action |
+| `sitting` | boolean | Sitting |
+| `gliding` | boolean | Glider active |
+| `sleeping` | boolean | In bed |
+
+### Intangible / Invulnerable Components
+
+Flag components that can be added/removed:
+
+```java
+// Intangible - makes entity pass through other entities (NOT blocks!)
+Class<?> intangibleClass = Class.forName("com.hypixel.hytale.server.core.modules.entity.component.Intangible");
+Object compType = intangibleClass.getMethod("getComponentType").invoke(null);
+store.ensureAndGetComponent(playerRef, (ComponentType) compType); // Add
+store.removeComponent(playerRef, (ComponentType) compType);       // Remove
+
+// Invulnerable - prevents damage
+Class<?> invulnClass = Class.forName("com.hypixel.hytale.server.core.modules.entity.component.Invulnerable");
+// Same pattern as above
+```
+
+> **Note:** `Intangible` affects entity-entity collision only, NOT block collision!
+
+### GameMode System
+
+```java
+Class<?> gameModeClass = Class.forName("com.hypixel.hytale.protocol.GameMode");
+// Enum values: Creative, Adventure, Survival (check at runtime)
+
+// Set on player
+for (Field f : player.getClass().getDeclaredFields()) {
+    if (f.getType() == gameModeClass) {
+        f.setAccessible(true);
+        f.set(player, targetMode);
+        break;
+    }
+}
+
+// Send packet to client
+Class<?> packetClass = Class.forName("com.hypixel.hytale.protocol.packets.player.SetGameMode");
+Object packet = packetClass.getConstructors()[0].newInstance(targetMode); // 1-param constructor
+Object connection = player.getClass().getMethod("getPlayerConnection").invoke(player);
+connection.getClass().getMethod("write", Object.class).invoke(connection, packet);
+```
+
+### No-Clip Collision (CLIENT-SIDE)
+
+**Critical Finding:** Block collision disable (noclip) appears to be **client-authoritative**.
+
+- The creative mode UI has a noclip toggle button
+- No server-side field or packet was found to control this
+- `MovementSettings` has no noclip/collision field
+- `MovementStates` has no noclip/collision field
+- `Intangible` component only affects entity-entity collision
+
+**Implication:** True noclip (passing through blocks) may require:
+1. Client-side mod
+2. An undiscovered server packet
+3. The creative UI toggle being client-only
+
+---
+
 ## TODO: Continue discovering
 - [x] How to access world from player - Use `ctx.sender().getWorld()`
 - [x] How to iterate all entities in a world - Use `World.execute()` + `Store.forEachChunk()`
@@ -558,5 +699,8 @@ getEntityStoreRegistry().registerSystem(new SpawnDetector());
 - [x] Particle system spawning - Use `ParticleUtil.spawnParticleEffect()` + asset files
 - [x] Sound system - Use `SoundUtil.playSoundEvent3d()` with `SoundCategory`
 - [x] Entity spawn detection - Use `EntityTickingSystem` + `NewSpawnComponent` query
+- [x] Movement system - MovementManager, MovementSettings, MovementStates components
+- [x] Flight control - Set `canFly` in MovementSettings
 - [ ] Figure out `*` prefix mechanism for code-registered interactions
 - [ ] NPC Role asset overrides for interactions (instead of runtime modification)
+- [ ] Block collision disable (noclip) - appears to be client-side only
