@@ -14,7 +14,7 @@ These systems were initially experimental but have been tested and verified. See
 
 ### Audio / Sound System - VERIFIED
 
-> **Status:** Working! See [API Discoveries - Sound System](99-api-discoveries.md#sound-system-verified)
+> **Status:** Working! See [API Discoveries - Sound System](api/99-api-discoveries.md#sound-system-verified)
 
 **Working Pattern:**
 ```java
@@ -35,7 +35,7 @@ SoundUtil.playSoundEvent3d(soundId, SoundCategory.SFX, x, y, z, store);
 
 ### Particle Effects System - VERIFIED
 
-> **Status:** Working! See [API Discoveries - Particle System](99-api-discoveries.md#particle-system-verified)
+> **Status:** Working! See [API Discoveries - Particle System](api/99-api-discoveries.md#particle-system-verified)
 
 **Working Pattern:**
 ```java
@@ -58,15 +58,15 @@ ParticleUtil.spawnParticleEffect("MyParticleSystem", position, store);
 
 ### Entity Spawn Detection - VERIFIED
 
-> **Status:** Working! See [API Discoveries - Entity Spawn Detection](99-api-discoveries.md#entity-spawn-detection-verified)
+> **Status:** Working! See [API Discoveries - Entity Spawn Detection](api/99-api-discoveries.md#entity-spawn-detection-verified)
 
-Use `EntityTickingSystem` with `NewSpawnComponent` query. See also [ECS System](02-ecs-system.md#entitytickingsystem-verified).
+Use `EntityTickingSystem` with `NewSpawnComponent` query. See also [ECS System](api/02-ecs-system.md#entitytickingsystem-verified).
 
 ---
 
 ### Animation State Machines - PARTIAL
 
-**Documented in:** [Entities - Entity Systems](03-entities.md#entity-systems-location)
+**Documented in:** [Entities - Entity Systems](api/03-entities.md#entity-systems-location)
 
 **What's Known:**
 - `ActiveAnimationComponent` tracks current animation
@@ -91,7 +91,7 @@ com.hypixel.hytale.server.npc.animations.NPCAnimationSlot
 
 ### Status Effects / Buffs - PARTIAL
 
-**Documented in:** [Entities - Entity Systems](03-entities.md#entity-systems-location)
+**Documented in:** [Entities - Entity Systems](api/03-entities.md#entity-systems-location)
 
 **What's Known:**
 - `ActiveEntityEffect` - Active effects on entities
@@ -117,7 +117,7 @@ com.hypixel.hytale.server.core.modules.entity.LivingEntityEffectSystem
 
 ### Scripting / Asset API - PARTIAL
 
-**Documented in:** [Interactions - Asset File Paths](06-interactions.md#asset-file-paths)
+**Documented in:** [Interactions - Asset File Paths](api/06-interactions.md#asset-file-paths)
 
 **Verified Asset Paths:**
 | Asset Type | Path |
@@ -143,8 +143,8 @@ com.hypixel.hytale.server.core.modules.entity.LivingEntityEffectSystem
 ### ECS Component System - DOCUMENTED
 
 > **Status:** Fully documented! See:
-> - [ECS System](02-ecs-system.md) - Core patterns
-> - [API Discoveries - ECS Component System](99-api-discoveries.md#ecs-component-system)
+> - [ECS System](api/02-ecs-system.md) - Core patterns
+> - [API Discoveries - ECS Component System](api/99-api-discoveries.md#ecs-component-system)
 > - [Reverse Engineering - Codebase Analysis](../reverse-engineering/codebase-analysis.md#entity-component-system)
 
 The ECS system is well-documented with working examples.
@@ -155,7 +155,7 @@ The ECS system is well-documented with working examples.
 
 ### Chunk Storage / Persistence
 
-**Partially in:** [API Discoveries - World/Universe](99-api-discoveries.md#worlduniverse)
+**Partially in:** [API Discoveries - World/Universe](api/99-api-discoveries.md#worlduniverse)
 
 **Identified Packages:**
 - `com.hypixel.hytale.server.core.universe.world.storage.ChunkStore`
@@ -178,7 +178,7 @@ The ECS system is well-documented with working examples.
 
 ### Multiplayer Synchronization
 
-**Partially in:** [API Discoveries - ECS Component System](99-api-discoveries.md#ecs-component-system)
+**Partially in:** [API Discoveries - ECS Component System](api/99-api-discoveries.md#ecs-component-system)
 
 **What We Know:**
 - `SnapshotBuffer` component (index 34) for network state tracking
@@ -252,15 +252,15 @@ See our [Contributing Guide](../CONTRIBUTING.md) for details.
 
 | System | Status | Main Documentation |
 |--------|--------|-------------------|
-| Sound/Audio | **VERIFIED** | [API Discoveries](99-api-discoveries.md#sound-system-verified) |
-| Particles | **VERIFIED** | [API Discoveries](99-api-discoveries.md#particle-system-verified) |
-| Spawn Detection | **VERIFIED** | [API Discoveries](99-api-discoveries.md#entity-spawn-detection-verified) |
-| ECS Components | **DOCUMENTED** | [ECS System](02-ecs-system.md), [Reverse Eng.](../reverse-engineering/codebase-analysis.md) |
-| Interactions | **DOCUMENTED** | [Interactions](06-interactions.md) |
-| Animations | Partial | [Entities](03-entities.md#entity-systems-location) |
-| Status Effects | Partial | [Entities](03-entities.md#entity-systems-location) |
-| Asset System | Partial | [Interactions](06-interactions.md#asset-file-paths) |
-| Chunk Storage | Partial | [API Discoveries](99-api-discoveries.md#worlduniverse) |
+| Sound/Audio | **VERIFIED** | [API Discoveries](api/99-api-discoveries.md#sound-system-verified) |
+| Particles | **VERIFIED** | [API Discoveries](api/99-api-discoveries.md#particle-system-verified) |
+| Spawn Detection | **VERIFIED** | [API Discoveries](api/99-api-discoveries.md#entity-spawn-detection-verified) |
+| ECS Components | **DOCUMENTED** | [ECS System](api/02-ecs-system.md), [Reverse Eng.](../reverse-engineering/codebase-analysis.md) |
+| Interactions | **DOCUMENTED** | [Interactions](api/06-interactions.md) |
+| Animations | Partial | [Entities](api/03-entities.md#entity-systems-location) |
+| Status Effects | Partial | [Entities](api/03-entities.md#entity-systems-location) |
+| Asset System | Partial | [Interactions](api/06-interactions.md#asset-file-paths) |
+| Chunk Storage | Partial | [API Discoveries](api/99-api-discoveries.md#worlduniverse) |
 | Network Sync | Partial | [Reverse Eng.](../reverse-engineering/codebase-analysis.md#network-protocol) |
 | Weather | Untested | [Reverse Eng.](../reverse-engineering/codebase-analysis.md#world-generation-system) |
 | Lighting | Untested | [Reverse Eng.](../reverse-engineering/codebase-analysis.md#entity-components) |
