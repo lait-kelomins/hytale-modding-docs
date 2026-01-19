@@ -234,5 +234,5 @@ public class MyCustomInteraction extends SimpleInteraction {
 
 ## Related Files
 
-- [02-ecs-system.md](02-ecs-system.md) - Component system
-- [05-events.md](05-events.md) - Event registration
+- [02-ecs-system.md](api/02-ecs-system.md) - Component system
+- [05-events.md](api/05-events.md) - Event registration

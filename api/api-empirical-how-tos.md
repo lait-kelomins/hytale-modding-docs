@@ -1027,7 +1027,7 @@ private void onPlayerChat(PlayerChatEvent event) {
 
 ### PlayerMouseButtonEvent (NOT Recommended for Entity Clicks)
 
-> **WARNING:** `PlayerMouseButtonEvent` does NOT reliably fire for entity interactions during normal gameplay. It only works when the mouse cursor is unlocked (in menus). For entity interactions, use the **Interaction System** instead (see [06-interactions.md](06-interactions.md)).
+> **WARNING:** `PlayerMouseButtonEvent` does NOT reliably fire for entity interactions during normal gameplay. It only works when the mouse cursor is unlocked (in menus). For entity interactions, use the **Interaction System** instead (see [06-interactions.md](api/06-interactions.md)).
 
 ```java
 // This does NOT work reliably for entity clicks during gameplay!
@@ -1070,7 +1070,7 @@ getCodecMapRegistry().register("MyEntityInteraction", MyEntityInteraction.class,
 // 3. Create asset files and attach to entities via Interactions component
 ```
 
-See [06-interactions.md](06-interactions.md) for complete details.
+See [06-interactions.md](api/06-interactions.md) for complete details.
 
 ---
 

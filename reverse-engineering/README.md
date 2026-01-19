@@ -10,10 +10,10 @@ This section contains detailed documentation from reverse engineering the Hytale
 
 | Document | Description |
 |----------|-------------|
-| [Codebase Analysis](codebase-analysis.md) | Full system documentation with code patterns |
-| [Quick Lookup](quick-lookup.md) | Fast reference: Use Case → Class Path → Tags |
-| [Answers](answers.md) | Specific answers to common modding questions |
-| [Status](status.md) | Analysis progress and completed systems |
+| [Codebase Analysis](reverse-engineering/codebase-analysis.md) | Full system documentation with code patterns |
+| [Quick Lookup](reverse-engineering/quick-lookup.md) | Fast reference: Use Case → Class Path → Tags |
+| [Answers](reverse-engineering/answers.md) | Specific answers to common modding questions |
+| [Status](reverse-engineering/status.md) | Analysis progress and completed systems |
 
 ## What's Covered
 
@@ -47,10 +47,10 @@ com.hypixel.hytale.
 
 ## How to Use
 
-1. **Looking for a specific system?** → Start with [Quick Lookup](quick-lookup.md)
-2. **Need detailed patterns?** → Read [Codebase Analysis](codebase-analysis.md)
-3. **Have a specific question?** → Check [Answers](answers.md)
-4. **Want to see what's documented?** → See [Status](status.md)
+1. **Looking for a specific system?** → Start with [Quick Lookup](reverse-engineering/quick-lookup.md)
+2. **Need detailed patterns?** → Read [Codebase Analysis](reverse-engineering/codebase-analysis.md)
+3. **Have a specific question?** → Check [Answers](reverse-engineering/answers.md)
+4. **Want to see what's documented?** → See [Status](reverse-engineering/status.md)
 
 ## Methodology
 
