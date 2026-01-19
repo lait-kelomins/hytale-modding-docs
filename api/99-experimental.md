@@ -1,91 +1,161 @@
 # Theoretical / Untested / Experimental
 
-> **Warning:** This section documents systems that have been identified through reverse engineering but have NOT been tested in actual plugin development. The information here is based on static code analysis and may be incomplete or inaccurate.
+> **Warning:** This section documents systems that have been identified through reverse engineering but have NOT been fully tested in plugin development. The information here is based on static code analysis and may be incomplete or inaccurate.
 
 ## Overview
 
-The following systems have been identified in the HytaleServer.jar codebase but require further exploration and testing before they can be used reliably in plugins.
+The following systems have been identified in the HytaleServer.jar codebase. Some have partial documentation elsewhere - check the cross-references!
+
+---
+
+## Verified Systems (Moved from Experimental)
+
+These systems were initially experimental but have been tested and verified. See the linked documentation for working code.
+
+### Audio / Sound System - VERIFIED
+
+> **Status:** Working! See [API Discoveries - Sound System](99-api-discoveries.md#sound-system-verified)
+
+**Working Pattern:**
+```java
+import com.hypixel.hytale.server.core.asset.type.soundevent.config.SoundEvent;
+import com.hypixel.hytale.server.core.universe.world.SoundUtil;
+import com.hypixel.hytale.protocol.SoundCategory;
+
+int soundId = SoundEvent.getAssetMap().getIndex("SFX_Consume_Bread");
+SoundUtil.playSoundEvent3d(soundId, SoundCategory.SFX, x, y, z, store);
+```
+
+**Still Untested:**
+- Custom sound registration
+- Looping sounds and music
+- Sound category volume control
+
+---
+
+### Particle Effects System - VERIFIED
+
+> **Status:** Working! See [API Discoveries - Particle System](99-api-discoveries.md#particle-system-verified)
+
+**Working Pattern:**
+```java
+import com.hypixel.hytale.server.core.universe.world.ParticleUtil;
+
+ParticleUtil.spawnParticleEffect("MyParticleSystem", position, store);
+```
+
+**Asset Files:**
+- `Server/Particles/{name}.particlesystem` - Particle system definition
+- `Server/Particles/Spawners/{name}.particlespawner` - Spawner configuration
+
+**Still Untested:**
+- Custom particle parameters (color, size at runtime)
+- Particle attachment to moving entities
+
+---
+
+## Partially Documented Systems
+
+### Entity Spawn Detection - VERIFIED
+
+> **Status:** Working! See [API Discoveries - Entity Spawn Detection](99-api-discoveries.md#entity-spawn-detection-verified)
+
+Use `EntityTickingSystem` with `NewSpawnComponent` query. See also [ECS System](02-ecs-system.md#entitytickingsystem-verified).
+
+---
+
+### Animation State Machines - PARTIAL
+
+**Documented in:** [Entities - Entity Systems](03-entities.md#entity-systems-location)
+
+**What's Known:**
+- `ActiveAnimationComponent` tracks current animation
+- `ActiveEntityEffect` / `EffectControllerComponent` in entity effect system
+- NPCs can trigger animations via `ActionPlayAnimation`
+- Damage causes have `animationId` and `deathAnimationId` fields
+
+**What Needs Testing:**
+- Triggering animations from plugins directly
+- Animation blending/layering
+- Custom animation registration
+- Animation events/callbacks
+
+**Related Classes:**
+```
+com.hypixel.hytale.server.core.modules.entity.component.ActiveAnimationComponent
+com.hypixel.hytale.server.core.entity.AnimationUtils
+com.hypixel.hytale.server.npc.animations.NPCAnimationSlot
+```
+
+---
+
+### Status Effects / Buffs - PARTIAL
+
+**Documented in:** [Entities - Entity Systems](03-entities.md#entity-systems-location)
+
+**What's Known:**
+- `ActiveEntityEffect` - Active effects on entities
+- `EffectControllerComponent` - Effect management
+- `LivingEntityEffectSystem` - Effect handling system
+- `ActionApplyEntityEffect` in NPC AI can apply effects
+- `EntityStatEffect` interaction type exists
+
+**What Needs Testing:**
+- Applying effects from plugins
+- Custom effect definitions
+- Effect duration and stacking
+- Effect removal
+
+**Related Classes:**
+```
+com.hypixel.hytale.server.core.entity.effect.ActiveEntityEffect
+com.hypixel.hytale.server.core.entity.effect.EffectControllerComponent
+com.hypixel.hytale.server.core.modules.entity.LivingEntityEffectSystem
+```
+
+---
+
+### Scripting / Asset API - PARTIAL
+
+**Documented in:** [Interactions - Asset File Paths](06-interactions.md#asset-file-paths)
+
+**Verified Asset Paths:**
+| Asset Type | Path |
+|------------|------|
+| RootInteraction | `Server/Item/RootInteractions/{id}.json` |
+| Interaction | `Server/Item/Interactions/{id}.json` |
+| NPC Role | `Server/NPC/Roles/{id}.json` |
+| Particles | `Server/Particles/{name}.particlesystem` |
+
+**What's Known:**
+- Most game behavior is defined via JSON assets
+- `AssetMap` used for asset ID lookups
+- `CodecMapRegistry` for registering custom types
+- Various `*JsonLoader` classes handle loading
+
+**What Needs Testing:**
+- Runtime asset modification
+- Custom asset type registration
+- Asset hot-reloading
+
+---
+
+### ECS Component System - DOCUMENTED
+
+> **Status:** Fully documented! See:
+> - [ECS System](02-ecs-system.md) - Core patterns
+> - [API Discoveries - ECS Component System](99-api-discoveries.md#ecs-component-system)
+> - [Reverse Engineering - Codebase Analysis](../reverse-engineering/codebase-analysis.md#entity-component-system)
+
+The ECS system is well-documented with working examples.
 
 ---
 
 ## Systems Requiring Further Analysis
 
-### Audio / Sound System
-
-**Identified Packages:**
-- `com.hypixel.hytale.server.core.modules.entity.component.AudioComponent`
-- `com.hypixel.hytale.server.core.modules.entity.component.MovementAudioComponent`
-- Sound event system via `SoundUtil.playSoundEvent3d()`
-
-**What We Know:**
-- Entities have `AudioComponent` for sound emission
-- `MovementAudioComponent` handles footstep sounds
-- Sounds are played via `SoundEvent.getAssetMap().getIndex("SoundId")`
-
-**What Needs Testing:**
-- Custom sound registration
-- 3D positional audio parameters
-- Sound categories and volume control
-- Looping sounds and music
-
----
-
-### Particle Effects System
-
-**Identified Patterns:**
-- Particles referenced in `Damage.IMPACT_PARTICLES`
-- `ActionSpawnParticles` in NPC AI system
-- Particle metadata in damage events
-
-**What Needs Testing:**
-- How to spawn particles from plugins
-- Available particle types
-- Custom particle parameters (color, size, lifetime)
-- Particle attachment to entities
-
----
-
-### Animation State Machines
-
-**Identified Packages:**
-- `com.hypixel.hytale.server.core.modules.entity.component.ActiveAnimationComponent`
-- `ActionPlayAnimation` in NPC system
-- Animation IDs in damage causes
-
-**What We Know:**
-- Entities have `ActiveAnimationComponent` tracking current animation
-- NPCs can trigger animations via `ActionPlayAnimation`
-- Damage causes have `animationId` and `deathAnimationId` fields
-
-**What Needs Testing:**
-- Triggering animations from plugins
-- Animation blending/layering
-- Custom animation registration
-- Animation events/callbacks
-
----
-
-### Scripting / Asset API
-
-**Identified Patterns:**
-- Asset-driven configuration throughout the codebase
-- JSON loaders in `server.worldgen.loader/`
-- `AssetMap` used for asset ID lookups
-
-**What We Know:**
-- Most game behavior is defined via JSON assets
-- Asset paths follow patterns like `Server/Item/Types/{id}.json`
-- Assets are loaded via various `*JsonLoader` classes
-
-**What Needs Testing:**
-- Runtime asset modification
-- Custom asset registration
-- Asset hot-reloading
-- Scripting hooks if any exist
-
----
-
 ### Chunk Storage / Persistence
+
+**Partially in:** [API Discoveries - World/Universe](99-api-discoveries.md#worlduniverse)
 
 **Identified Packages:**
 - `com.hypixel.hytale.server.core.universe.world.storage.ChunkStore`
@@ -93,6 +163,7 @@ The following systems have been identified in the HytaleServer.jar codebase but 
 - `GeneratedChunk` with block/entity data
 
 **What We Know:**
+- `EntityStore` wraps inner `Store` (see API Discoveries)
 - Chunks stored via `ChunkStore` with ECS pattern
 - `WorldChunk` contains block and entity data
 - Chunk sections use `Holder<ChunkStore>[]`
@@ -107,21 +178,22 @@ The following systems have been identified in the HytaleServer.jar codebase but 
 
 ### Multiplayer Synchronization
 
-**Identified Packages:**
-- `com.hypixel.hytale.protocol.packets/`
-- `SnapshotBuffer` component for network state
-- Various `Set*` packets for state sync
+**Partially in:** [API Discoveries - ECS Component System](99-api-discoveries.md#ecs-component-system)
 
 **What We Know:**
-- Entities have `SnapshotBuffer` for network state tracking
+- `SnapshotBuffer` component (index 34) for network state tracking
+- `NetworkId` component (index 17) for entity identification
 - Packets organized by category (player, entity, inventory, blocks)
 - `ModelTransform` tracks sent transform state
+- `isNetworkOutdated` field on components
 
 **What Needs Testing:**
 - Custom packet registration
 - State synchronization patterns
 - Client prediction handling
 - Bandwidth optimization
+
+**Related:** See [Reverse Engineering - Network Protocol](../reverse-engineering/codebase-analysis.md#network-protocol)
 
 ---
 
@@ -132,6 +204,8 @@ The following systems have been identified in the HytaleServer.jar codebase but 
 - Weather-related packets (if any)
 
 **Status:** Not yet investigated. Biomes have `EnvironmentContainer` which may control weather.
+
+**Related:** See [Reverse Engineering - World Generation](../reverse-engineering/codebase-analysis.md#world-generation-system)
 
 ---
 
@@ -144,6 +218,7 @@ The following systems have been identified in the HytaleServer.jar codebase but 
 **What We Know:**
 - Entities can have dynamic lights attached
 - Lights can be persistent or temporary
+- Components exist at known indices in ECS
 
 **What Needs Testing:**
 - Creating lights from plugins
@@ -151,16 +226,7 @@ The following systems have been identified in the HytaleServer.jar codebase but 
 - Light attachment to entities
 - Performance implications
 
----
-
-### Status Effects / Buffs
-
-**Potential Locations:**
-- `ActionApplyEntityEffect` in NPC AI
-- `EntityStatEffect` interaction type
-- Stat-based entity filters
-
-**Status:** Partially identified. NPCs can apply effects, but the full effect system needs mapping.
+**Related:** See [Reverse Engineering - Entity Components](../reverse-engineering/codebase-analysis.md#entity-components)
 
 ---
 
@@ -182,16 +248,29 @@ See our [Contributing Guide](../CONTRIBUTING.md) for details.
 
 ---
 
-## Reverse Engineering Notes
+## Cross-Reference Index
 
-These systems were identified through analysis of HytaleServer.jar (~37,900 classes). Key techniques used:
+| System | Status | Main Documentation |
+|--------|--------|-------------------|
+| Sound/Audio | **VERIFIED** | [API Discoveries](99-api-discoveries.md#sound-system-verified) |
+| Particles | **VERIFIED** | [API Discoveries](99-api-discoveries.md#particle-system-verified) |
+| Spawn Detection | **VERIFIED** | [API Discoveries](99-api-discoveries.md#entity-spawn-detection-verified) |
+| ECS Components | **DOCUMENTED** | [ECS System](02-ecs-system.md), [Reverse Eng.](../reverse-engineering/codebase-analysis.md) |
+| Interactions | **DOCUMENTED** | [Interactions](06-interactions.md) |
+| Animations | Partial | [Entities](03-entities.md#entity-systems-location) |
+| Status Effects | Partial | [Entities](03-entities.md#entity-systems-location) |
+| Asset System | Partial | [Interactions](06-interactions.md#asset-file-paths) |
+| Chunk Storage | Partial | [API Discoveries](99-api-discoveries.md#worlduniverse) |
+| Network Sync | Partial | [Reverse Eng.](../reverse-engineering/codebase-analysis.md#network-protocol) |
+| Weather | Untested | [Reverse Eng.](../reverse-engineering/codebase-analysis.md#world-generation-system) |
+| Lighting | Untested | [Reverse Eng.](../reverse-engineering/codebase-analysis.md#entity-components) |
+| Quests | Unknown | - |
 
-- `javap` for class structure analysis
-- Pattern matching on class/method names
-- Cross-referencing with known working code
-- Asset file analysis
+---
 
-For detailed reverse engineering documentation, see the `reverse-engineer/docs/` folder:
-- `CODEBASE_ANALYSIS.md` - Full system documentation
-- `CODEBASE_ANALYSIS_MAP.md` - Quick lookup index
-- `ANSWERS.md` - Specific question answers
+## Reverse Engineering Resources
+
+For deeper analysis of any system, see:
+- [Codebase Analysis](../reverse-engineering/codebase-analysis.md) - Full system documentation
+- [Quick Lookup](../reverse-engineering/quick-lookup.md) - Fast reference by use case
+- [Common Questions](../reverse-engineering/answers.md) - Specific answers
