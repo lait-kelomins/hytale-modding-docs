@@ -18,3 +18,10 @@
 
 - **Experimental**
   - [Untested Systems](api/99-experimental.md)
+
+- **Reverse Engineering**
+  - [Overview](reverse-engineering/README.md)
+  - [Codebase Analysis](reverse-engineering/codebase-analysis.md)
+  - [Quick Lookup](reverse-engineering/quick-lookup.md)
+  - [Common Questions](reverse-engineering/answers.md)
+  - [Analysis Status](reverse-engineering/status.md)
