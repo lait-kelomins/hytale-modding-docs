@@ -207,5 +207,5 @@ Crafting stations and workbenches.
 
 ## Related Files
 
-- [02-ecs-system.md](api/02-ecs-system.md) - Block event handling
-- [06-items.md](api/06-items.md) - Item drops
+- [02-ecs-system.md](02-ecs-system.md) - Block event handling
+- [06-items.md](06-items.md) - Item drops

@@ -170,7 +170,7 @@ Entities are spawned via the prefab system:
 
 > **WARNING - LoadedNPCEvent:** Does **NOT fire** for animal/NPC spawns. Do not rely on this event for detecting new entities.
 
-> **VERIFIED - EntityTickingSystem + NewSpawnComponent:** Use `EntityTickingSystem<EntityStore>` with a query for `NewSpawnComponent` to detect spawns in real-time. The engine adds `NewSpawnComponent` when entities are created and removes it after processing. See [99-api-discoveries.md](api/99-api-discoveries.md) for complete implementation pattern.
+> **VERIFIED - EntityTickingSystem + NewSpawnComponent:** Use `EntityTickingSystem<EntityStore>` with a query for `NewSpawnComponent` to detect spawns in real-time. The engine adds `NewSpawnComponent` when entities are created and removes it after processing. See [99-api-discoveries.md](99-api-discoveries.md) for complete implementation pattern.
 
 > **FALLBACK:** Periodic scanning (every 30 seconds) with `Store.forEachChunk()` can be used if TickingSystem doesn't work for your use case.
 
@@ -255,5 +255,5 @@ public Query<EntityStore> getQuery() {
 
 ## Related Files
 
-- [02-ecs-system.md](api/02-ecs-system.md) - ECS system details
-- [05-events.md](api/05-events.md) - Event types
+- [02-ecs-system.md](02-ecs-system.md) - ECS system details
+- [05-events.md](05-events.md) - Event types

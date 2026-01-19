@@ -280,6 +280,6 @@ public class MyPlugin extends JavaPlugin {
 
 ## Related Files
 
-- [02-ecs-system.md](api/02-ecs-system.md) - ECS components and systems
-- [04-commands.md](api/04-commands.md) - Command registration
-- [05-events.md](api/05-events.md) - Event system
+- [02-ecs-system.md](02-ecs-system.md) - ECS components and systems
+- [04-commands.md](04-commands.md) - Command registration
+- [05-events.md](05-events.md) - Event system

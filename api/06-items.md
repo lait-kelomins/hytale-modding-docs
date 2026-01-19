@@ -238,5 +238,5 @@ SwitchActiveSlotEvent
 
 ## Related Files
 
-- [07-blocks.md](api/07-blocks.md) - Block types
-- [05-events.md](api/05-events.md) - Crafting events
+- [07-blocks.md](07-blocks.md) - Block types
+- [05-events.md](05-events.md) - Crafting events
