@@ -1,5 +1,7 @@
 # Hytale Modding Documentation
 
+[![View Docs](https://img.shields.io/badge/View%20Docs-GitHub%20Pages-blue)](https://lait-kelomins.github.io/hytale-modding-docs/) [![GitHub Repo](https://img.shields.io/badge/GitHub-Repository-black)](https://github.com/lait-kelomins/hytale-modding-docs)
+
 > Unofficial documentation for the Hytale Server modding API, compiled through experimentation and reverse engineering.
 
 ## About
