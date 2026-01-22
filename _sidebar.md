@@ -2,6 +2,7 @@
 - [Quick Start](hytale-plugin-setup.md)
 
 - **Guides**
+  - [UI System](ui-guide.md)
   - [How-To Examples](api/api-empirical-how-tos.md)
   - [API Discoveries](api/99-api-discoveries.md)
   - [Script Snippets](example-script-snippet.md)
