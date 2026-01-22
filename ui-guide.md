@@ -495,6 +495,7 @@ import com.hypixel.hytale.server.core.universe.PlayerRef;
 | Events not firing | Use `events.addEventBinding()`, not `cmd` |
 | Codec errors | Call `.add()` after each `.append()` in codec |
 | handleDataEvent not called | Must be `public`, not `protected` |
+| **Red X textures** | Texture paths don't work from plugins - see [UI Styling](ui-styling.md) |
 
 ---
 
