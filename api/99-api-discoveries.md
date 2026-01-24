@@ -690,6 +690,106 @@ connection.getClass().getMethod("write", Object.class).invoke(connection, packet
 
 ---
 
+---
+
+## NPC Behavior System (VERIFIED)
+
+### Core Components Registration
+
+Register custom actions/sensors for NPC behavior trees in `start()`:
+
+```java
+NPCPlugin.get().registerCoreComponentType("Tame", BuilderActionTame::new);
+NPCPlugin.get().registerCoreComponentType("Tamed", BuilderSensorTamed::new);
+```
+
+### Class Paths (NPC System)
+
+| Class | Path |
+|-------|------|
+| `NPCPlugin` | `com.hypixel.hytale.server.npc.NPCPlugin` |
+| `NPCEntity` | `com.hypixel.hytale.server.npc.entities.NPCEntity` |
+| `Role` | `com.hypixel.hytale.server.npc.role.Role` |
+| `WorldSupport` | `com.hypixel.hytale.server.npc.role.support.WorldSupport` |
+| `StateSupport` | `com.hypixel.hytale.server.npc.role.support.StateSupport` |
+| `Attitude` | `com.hypixel.hytale.server.core.asset.type.attitude.Attitude` |
+| `AttitudeGroup` | `com.hypixel.hytale.server.npc.config.AttitudeGroup` |
+| `ActionBase` | `com.hypixel.hytale.server.npc.corecomponents.ActionBase` |
+| `SensorBase` | `com.hypixel.hytale.server.npc.corecomponents.SensorBase` |
+| `BuilderActionBase` | `com.hypixel.hytale.server.npc.corecomponents.builders.BuilderActionBase` |
+| `BuilderSensorBase` | `com.hypixel.hytale.server.npc.corecomponents.builders.BuilderSensorBase` |
+| `BuilderSupport` | `com.hypixel.hytale.server.npc.asset.builder.BuilderSupport` |
+| `InfoProvider` | `com.hypixel.hytale.server.npc.sensorinfo.InfoProvider` |
+| `RoleBuilderSystem` | `com.hypixel.hytale.server.npc.systems.RoleBuilderSystem` |
+
+### Class Paths (ECS Systems)
+
+| Class | Path |
+|-------|------|
+| `HolderSystem` | `com.hypixel.hytale.component.system.HolderSystem` |
+| `Holder` | `com.hypixel.hytale.component.Holder` |
+| `Query` | `com.hypixel.hytale.component.query.Query` |
+| `Dependency` | `com.hypixel.hytale.component.dependency.Dependency` |
+| `SystemDependency` | `com.hypixel.hytale.component.dependency.SystemDependency` |
+| `Order` | `com.hypixel.hytale.component.dependency.Order` |
+| `AddReason` | `com.hypixel.hytale.component.AddReason` |
+| `RemoveReason` | `com.hypixel.hytale.component.RemoveReason` |
+
+### Class Paths (Codecs)
+
+| Class | Path |
+|-------|------|
+| `BuilderCodec` | `com.hypixel.hytale.codec.builder.BuilderCodec` |
+| `Codec` | `com.hypixel.hytale.codec.Codec` |
+| `KeyedCodec` | `com.hypixel.hytale.codec.KeyedCodec` |
+
+### Holder Types (for config parsing)
+
+| Class | Path |
+|-------|------|
+| `StringArrayHolder` | `com.hypixel.hytale.server.npc.asset.builder.holder.StringArrayHolder` |
+| `BooleanHolder` | `com.hypixel.hytale.server.npc.asset.builder.holder.BooleanHolder` |
+| `BuilderDescriptorState` | `com.hypixel.hytale.server.npc.asset.builder.BuilderDescriptorState` |
+
+### NPC Spawn Tracking
+
+Remove tamed animals from spawn population limits:
+
+```java
+NPCEntity npc = store.getComponent(ref, NPCEntity.getComponentType());
+boolean wasTracked = npc.updateSpawnTrackingState(false);  // Remove from tracking
+npc.updateSpawnTrackingState(true);  // Re-enable tracking
+```
+
+### Attitude System
+
+Set NPC attitude to friendly (requires reflection):
+
+```java
+// Cache field
+Field attitudeField = WorldSupport.class.getDeclaredField("defaultPlayerAttitude");
+attitudeField.setAccessible(true);
+
+// Get WorldSupport from NPC
+NPCEntity npc = store.getComponent(ref, NPCEntity.getComponentType());
+WorldSupport worldSupport = npc.getRole().getWorldSupport();
+
+// Set attitude
+attitudeField.set(worldSupport, Attitude.REVERED);
+```
+
+### Attitude Groups (discovered)
+
+| Group ID | Animals |
+|----------|---------|
+| `Livestock` | Cow, Pig, Chicken, Sheep |
+| `PreyBig` | Deer, Horse, Camel |
+| `PreySmall` | Rabbit, Bunny |
+| `Critters` | Frog, Mouse, Squirrel |
+| `Predator` | Wolf, Bear, Fox |
+
+---
+
 ## TODO: Continue discovering
 - [x] How to access world from player - Use `ctx.sender().getWorld()`
 - [x] How to iterate all entities in a world - Use `World.execute()` + `Store.forEachChunk()`
@@ -701,6 +801,11 @@ connection.getClass().getMethod("write", Object.class).invoke(connection, packet
 - [x] Entity spawn detection - Use `EntityTickingSystem` + `NewSpawnComponent` query
 - [x] Movement system - MovementManager, MovementSettings, MovementStates components
 - [x] Flight control - Set `canFly` in MovementSettings
+- [x] NPC Behavior Trees - Custom actions/sensors via `NPCPlugin.registerCoreComponentType()`
+- [x] NPC Attitude System - Set via reflection on `WorldSupport.defaultPlayerAttitude`
+- [x] NPC Spawn Tracking - `NPCEntity.updateSpawnTrackingState(false)` to remove from limits
+- [x] Custom ECS Components - Use `BuilderCodec` for persistent components
+- [x] HolderSystem - Entity lifecycle system (onEntityAdd/onEntityRemoved)
 - [ ] Figure out `*` prefix mechanism for code-registered interactions
 - [ ] NPC Role asset overrides for interactions (instead of runtime modification)
 - [ ] Block collision disable (noclip) - appears to be client-side only

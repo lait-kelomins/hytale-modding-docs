@@ -345,6 +345,184 @@ protected void setup() {
 
 ---
 
+## HolderSystem (Entity Lifecycle)
+
+For processing entities when they are added to or removed from the world. Unlike `EntityEventSystem` which handles events, `HolderSystem` handles entity lifecycle.
+
+### Import
+```java
+import com.hypixel.hytale.component.system.HolderSystem;
+import com.hypixel.hytale.component.Holder;
+import com.hypixel.hytale.component.AddReason;
+import com.hypixel.hytale.component.RemoveReason;
+import com.hypixel.hytale.component.dependency.*;
+```
+
+### Signature
+```java
+public abstract class HolderSystem<S extends Store>
+```
+
+### Implementation
+```java
+public class TameActivateSystem extends HolderSystem<EntityStore> {
+    private final ComponentType<EntityStore, NPCEntity> npcType;
+    private final ComponentType<EntityStore, TameComponent> tameType;
+    private final Query<EntityStore> query;
+    private final Set<Dependency<EntityStore>> dependencies;
+
+    public TameActivateSystem() {
+        this.npcType = NPCEntity.getComponentType();
+        this.tameType = TameComponent.getComponentType();
+
+        // Query: entities with NPCEntity but NOT NPCMountComponent
+        this.query = Query.and(npcType, Query.not(NPCMountComponent.getComponentType()));
+
+        // Run AFTER RoleBuilderSystem completes
+        this.dependencies = Set.of(new SystemDependency<>(Order.AFTER, RoleBuilderSystem.class));
+    }
+
+    @Override
+    public Query<EntityStore> getQuery() { return this.query; }
+
+    @Override
+    public Set<Dependency<EntityStore>> getDependencies() { return this.dependencies; }
+
+    @Override
+    public void onEntityAdd(Holder<EntityStore> holder, AddReason reason, Store<EntityStore> store) {
+        // Entity was added to world (spawned or loaded)
+        NPCEntity npc = holder.getComponent(npcType);
+        TameComponent tame = holder.ensureAndGetComponent(tameType);
+
+        if (tame.isTamed()) {
+            // Restore tamed state after world load
+        }
+    }
+
+    @Override
+    public void onEntityRemoved(Holder<EntityStore> holder, RemoveReason reason, Store<EntityStore> store) {
+        // Entity removed from world - cleanup if needed
+    }
+}
+```
+
+### Key Differences from EntityEventSystem
+| Feature | EntityEventSystem | HolderSystem |
+|---------|-------------------|--------------|
+| Trigger | Specific events (BreakBlockEvent, etc.) | Entity add/remove |
+| Use Case | React to player actions | Entity lifecycle, state restoration |
+| Holder Access | Via ArchetypeChunk | Direct Holder parameter |
+
+### Registration
+```java
+@Override
+protected void setup() {
+    getEntityStoreRegistry().registerSystem(new TameActivateSystem());
+}
+```
+
+---
+
+## Custom Components (Persistence)
+
+Create components that save/load with the world using `BuilderCodec`.
+
+### Import
+```java
+import com.hypixel.hytale.codec.Codec;
+import com.hypixel.hytale.codec.KeyedCodec;
+import com.hypixel.hytale.codec.builder.BuilderCodec;
+import com.hypixel.hytale.component.Component;
+import com.hypixel.hytale.component.ComponentType;
+```
+
+### Component Definition
+```java
+public class TameComponent implements Component<EntityStore> {
+    // CODEC defines serialization (saved to world)
+    public static final BuilderCodec<TameComponent> CODEC = BuilderCodec.builder(
+            TameComponent.class, TameComponent::new)
+        .append(new KeyedCodec<>("IsTamed", Codec.BOOLEAN),
+            (data, val) -> data.isTamed = val, data -> data.isTamed)
+        .add()
+        .append(new KeyedCodec<>("TamerUUID", Codec.UUID_BINARY),
+            (data, val) -> data.tamerUUID = val, data -> data.tamerUUID)
+        .add()
+        .append(new KeyedCodec<>("TamerName", Codec.STRING),
+            (data, val) -> data.tamerName = val, data -> data.tamerName)
+        .add()
+        .build();
+
+    // Use boxed Boolean for null safety in codec
+    private Boolean isTamed = false;
+    private UUID tamerUUID = null;
+    private String tamerName = null;
+
+    public boolean isTamed() {
+        return Boolean.TRUE.equals(isTamed);
+    }
+
+    public void setTamed(UUID player, String playerName) {
+        this.isTamed = true;
+        this.tamerUUID = player;
+        this.tamerName = playerName;
+    }
+
+    @Override
+    public Component<EntityStore> clone() {
+        TameComponent copy = new TameComponent();
+        copy.isTamed = this.isTamed;
+        copy.tamerUUID = this.tamerUUID;
+        copy.tamerName = this.tamerName;
+        return copy;
+    }
+}
+```
+
+### Registration (in Plugin)
+```java
+public class MyPlugin extends JavaPlugin {
+    private ComponentType<EntityStore, TameComponent> tameComponentType;
+
+    @Override
+    protected void setup() {
+        // Register component with name and codec
+        tameComponentType = this.getEntityStoreRegistry().registerComponent(
+            TameComponent.class, "Tame", TameComponent.CODEC);
+    }
+
+    public ComponentType<EntityStore, TameComponent> getTameComponentType() {
+        return tameComponentType;
+    }
+}
+```
+
+### Usage
+```java
+// Get component (returns null if missing)
+TameComponent comp = store.getComponent(entityRef, tameComponentType);
+
+// Get or create component
+TameComponent comp = store.ensureAndGetComponent(entityRef, tameComponentType);
+
+// From Holder (in HolderSystem)
+TameComponent comp = holder.getComponent(tameComponentType);
+TameComponent comp = holder.ensureAndGetComponent(tameComponentType);
+```
+
+### Available Codec Types
+| Codec | Java Type |
+|-------|-----------|
+| `Codec.BOOLEAN` | Boolean |
+| `Codec.STRING` | String |
+| `Codec.INT` | Integer |
+| `Codec.LONG` | Long |
+| `Codec.FLOAT` | Float |
+| `Codec.DOUBLE` | Double |
+| `Codec.UUID_BINARY` | UUID |
+
+---
+
 ## Related Files
 
 - [01-plugin-system.md](api/01-plugin-system.md) - Plugin setup
