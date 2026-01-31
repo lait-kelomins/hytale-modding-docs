@@ -380,10 +380,82 @@ Check an entity's attitude in-game:
 
 ---
 
+## Despawn Prevention
+
+### The Problem
+
+Tamed animals need to persist even when players move far away. By default, NPCs despawn when players leave the area.
+
+### Asset-Level Options (Limited)
+
+**Spawn Markers** have a `DeactivationDistance` field that controls despawn distance:
+
+```json
+{
+  "Model": "NPC_Spawn_Marker",
+  "NPCs": [{ "Name": "Cow_Tamed", "Weight": 100 }],
+  "DeactivationDistance": 1500
+}
+```
+
+**However**, spawn markers only work for:
+- Pre-placed NPCs in prefabs/structures
+- Static, location-bound spawns
+
+They **do NOT work** for dynamically tamed animals because:
+1. Spawn markers are placed at fixed world locations
+2. Tamed animals are created at runtime from wild animals
+3. There's no way to create spawn markers programmatically
+
+See [NPC Spawn Markers](npc-spawn-markers.md) for details.
+
+### Java-Side Solution
+
+For dynamically tamed animals, disable spawn tracking via Java:
+
+```java
+// In TameHelper or when taming succeeds
+npcEntity.updateSpawnTrackingState(false);
+```
+
+This tells the spawn system not to track/despawn the NPC.
+
+**Caveats:**
+- Must be called after taming
+- May need to be re-applied after certain events (role change, chunk reload)
+- Edge cases exist with world save/load
+
+### Recommended Approach
+
+1. **Call `updateSpawnTrackingState(false)`** immediately after taming
+2. **Add a periodic check** to ensure it stays disabled for tamed animals
+3. **Use persistence system** to restore taming state on world load
+
+```java
+// Periodic check (every 30 seconds)
+scheduledTasks.add(tickScheduler.scheduleAtFixedRate(() -> {
+    for (World world : Universe.get().getWorlds()) {
+        world.execute(store -> {
+            store.forEachEntity(HyTameComponent.getComponentType(), (ref, hyTame) -> {
+                if (hyTame.isTamed()) {
+                    NPCEntity npc = store.getComponent(ref, NPCEntity.getComponentType());
+                    if (npc != null) {
+                        npc.updateSpawnTrackingState(false);
+                    }
+                }
+            });
+        });
+    }
+}, 30, 30, TimeUnit.SECONDS));
+```
+
+---
+
 ## Related Documentation
 
 - [Hytalor Patch Format](hytalor-patch-format.md)
 - [NPC Attitude System](npc-attitude-system.md)
 - [NPC Interactions](npc-interactions.md)
 - [NPC Interaction Hints](npc-interaction-hints.md)
+- [NPC Spawn Markers](npc-spawn-markers.md)
 - [ECS Patterns](ecs-patterns.md)
