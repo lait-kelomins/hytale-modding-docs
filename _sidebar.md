@@ -16,6 +16,13 @@
   - [Interactions](api/06-interactions.md)
   - [Blocks](api/07-blocks.md)
 
+- **NPC Systems**
+  - [NPC Interactions](api/npc-interactions.md)
+  - [NPC Attitude System](api/npc-attitude-system.md)
+  - [NPC Interaction Hints](api/npc-interaction-hints.md)
+  - [Asset-Based Taming](api/asset-based-taming.md)
+  - [Hytalor Patch Format](api/hytalor-patch-format.md)
+
 - **UI System**
   - [UI Guide](ui-guide.md)
   - [UI Styling](ui-styling.md)
