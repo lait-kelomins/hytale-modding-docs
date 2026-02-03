@@ -195,3 +195,33 @@ mcp__inspector__inspector_publish_patch
 - Both require appropriate attitude checks
 - The `$Harvest` state name starts with `$` indicating it's a special/internal state
 - Model attachments allow visual state changes (e.g., wool on/off for sheep)
+
+---
+
+## Adding Custom Interactions (Taming/Breeding)
+
+> **See:** [InteractionInstruction Patching Guide](interaction-instruction-patching.md) for detailed patterns
+
+### Critical Rule: Single-Instruction Pattern
+
+When adding custom F-key interactions (like taming or breeding), **all logic must be in ONE instruction**:
+
+```json
+{
+    "Continue": true,
+    "Sensor": {
+        "Type": "And",
+        "Sensors": [
+            { "Type": "Tamed", "Set": true },           // Condition
+            { "Type": "Player", "Range": 5, "Filters": [{ "Type": "ItemInHand", ... }] },
+            { "Type": "HasInteracted" }                  // F-key trigger
+        ]
+    },
+    "Actions": [
+        { "Type": "SetInteractable", "Interactable": true, "ShowPrompt": true },
+        { "Type": "HyTameFeedInteraction" }              // Custom action
+    ]
+}
+```
+
+**Do NOT use separate instructions** for hint display and action trigger - this pattern fails.
